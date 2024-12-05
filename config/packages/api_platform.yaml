@@ -1,0 +1,41 @@
+api_platform:
+    title: "Lego library api"
+    description: "This is a library to store your personal lego models"
+    version: 1.0.0
+    formats:
+        multipart: ['multipart/form-data']
+        jsonld: ['application/ld+json']
+        json: ['application/json']
+    docs_formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']
+        jsonopenapi: ['application/vnd.openapi+json']
+        html: ['text/html']
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
+        extra_properties:
+            standard_put: true
+            rfc_7807_compliant_errors: true
+    #event_listeners_backward_compatibility_layer: false
+    #keep_legacy_inflector: false
+    swagger:
+        api_keys:
+            JWT:
+                name: Authorization
+                type: header
+    graphql:
+        graphiql:
+            enabled: false
+    # Rest of the settings removed for brevity
+    exception_to_status:
+        # The handlers are registered by default, keep those lines to prevent unexpected side effects
+        Symfony\Component\Serializer\Exception\ExceptionInterface: 400
+        ApiPlatform\Core\Exception\InvalidArgumentException: 400
+        ApiPlatform\Core\Exception\FilterValidationException: 400
+        Doctrine\ORM\OptimisticLockException: 409
+        ApiPlatform\Core\Bridge\Symfony\Validator\Exception\ValidationException: 422 # Unprocessable entity
+
+        # Custom mapping
+        App\Exception\NotFoundException: 404
