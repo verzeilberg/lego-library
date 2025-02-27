@@ -2,31 +2,30 @@
 
 namespace App\Repository;
 
-use App\Entity\Book;
-use App\Entity\PasswordResetToken;
+use App\Entity\UserToken;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Book>
+ * @extends ServiceEntityRepository<UserToken>
  *
- * @method Book|null find($id, $lockMode = null, $lockVersion = null)
- * @method Book|null findOneBy(array $criteria, array $orderBy = null)
- * @method Book[]    findAll()
- * @method Book[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method UserToken|null find($id, $lockMode = null, $lockVersion = null)
+ * @method UserToken|null findOneBy(array $criteria, array $orderBy = null)
+ * @method UserToken[]    findAll()
+ * @method UserToken[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class PasswordResetTokenRepository extends ServiceEntityRepository
+class UserTokenRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, PasswordResetToken::class);
+        parent::__construct($registry, UserToken::class);
     }
 
     public function deleteByToken(string $token): mixed
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
 
-        $qb->delete(PasswordResetToken::class, 'prt')
+        $qb->delete(UserToken::class, 'prt')
             ->where('prt.token = :token')
             ->setParameter('token', $token);
 
@@ -34,7 +33,7 @@ class PasswordResetTokenRepository extends ServiceEntityRepository
     }
 
     //    /**
-    //     * @return Book[] Returns an array of Book objects
+    //     * @return UserToken[] Returns an array of UserToken objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -48,7 +47,7 @@ class PasswordResetTokenRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Book
+    //    public function findOneBySomeField($value): ?UserToken
     //    {
     //        return $this->createQueryBuilder('b')
     //            ->andWhere('b.exampleField = :val')

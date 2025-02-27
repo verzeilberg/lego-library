@@ -1,8 +1,9 @@
 {% extends "emails/base.html.twig" %}
 
 {% block content %}
-    <p>Hi {{ user.firstName }},</p>
-    <p>Thanks for signing up for an account for the Stock Portfolio app. To activate your account please click the following button.</p>
+    <p>Hallo {{ user.firstName }},</p>
+    <p>Bedankt dat u een account heeft aangemaakt voor de LEgo library app.</p>
+    <p>Vul onderstaande code in de app om uw account te activeren en in te loggen.</p>
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
         <tbody>
         <tr>
@@ -10,7 +11,7 @@
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                     <tbody>
                     <tr>
-                        <td> <a href="{{ activationLink }}" target="_blank">Activate account</a> </td>
+                        <td> {{ tokenCode }} </td>
                     </tr>
                     </tbody>
                 </table>
@@ -18,7 +19,5 @@
         </tr>
         </tbody>
     </table>
-    <p>If you cannot click the link, copy and paste this in to your browser:</p>
-    <p>{{ activationLink }}</p>
-    <p>After activating your account you can use the service.</p>
+    <p>Nadat u uw account heeft geactiveerd, kunt u de service gebruiken.</p>
 {% endblock %}

@@ -2,24 +2,20 @@
 
 namespace App\Controller;
 
-use App\Dto\Request\User\ForgotPasswordRequest;
+use App\Dto\Request\User\ProfileRequest;
 use App\Entity\MediaObject;
 use App\Entity\PasswordResetToken;
-use App\Entity\User;
 use App\Entity\UserData;
 use App\Repository\UserRepository;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 
 class UploadImageController extends AbstractController
 {
@@ -27,26 +23,34 @@ class UploadImageController extends AbstractController
     private $entityManager;
     private $mailer;
 
+    private $uploaderHelper;
+
     private readonly UserService $userService;
 
     public function __construct(
         UserRepository $userRepository,
         EntityManagerInterface $entityManager,
         MailerInterface $mailer,
-        UserService $userService
+        UserService $userService,
+        UploaderHelper  $uploaderHelper
     )
     {
         $this->userRepository = $userRepository;
         $this->entityManager = $entityManager;
         $this->mailer = $mailer;
         $this->userService = $userService;
+        $this->uploaderHelper = $uploaderHelper;
     }
 
-    public function __invoke($id,Request $request): JsonResponse
+    public function __invoke(
+        Request $request,
+        Security $security
+    ): JsonResponse
     {
-        $userData = $this->entityManager->getRepository(UserData::class)->findOneByOwner($id);
 
-        if (!$userData) {
+        $user = $security->getUser();
+
+        if (!$user) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
@@ -56,16 +60,20 @@ class UploadImageController extends AbstractController
             return new JsonResponse(['message' => 'File is required!'], Response::HTTP_BAD_REQUEST);
         }
 
-        $mediaObject = new MediaObject();
-        $mediaObject->file = $imageFile;
-
-        $userData->setImage($mediaObject);
-
-        $this->entityManager->persist($mediaObject);
+        $userData = $user->getUserData();
+        $userData->setFile($imageFile);
         $this->entityManager->persist($userData);
         $this->entityManager->flush();
 
+        $profileRequest = new ProfileRequest();
+        $profileRequest->setUserName($userData->getUsername());
+        $profileRequest->setFirstName($userData->getFirstName());
+        $profileRequest->setLastName($userData->getLastName());
+        $profileRequest->setEmail($user->getEmail());
+        //Get the full file/image path
+        $path = $this->uploaderHelper->asset($userData, 'file');
+        $profileRequest->setProfilePicture($path);
 
-        return new JsonResponse($mediaObject);
+        return new JsonResponse($profileRequest);
     }
 }

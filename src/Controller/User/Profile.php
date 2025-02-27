@@ -4,8 +4,10 @@ namespace App\Controller\User;
 use App\Dto\Request\User\ProfileRequest;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 
 /**
@@ -23,11 +25,25 @@ class Profile extends AbstractController
      * @param Request $request
      * @return JsonResponse
      */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(
+        Request $request,
+        Security $security
+    ): JsonResponse
     {
 
-        $id = $request->get('id');
-        $profile = $this->userService->getProfile($id);
+        $user = $security->getUser();
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $userData = $user->getUserData();
+
+        if (!$userData) {
+            return new JsonResponse(['message' => 'User data not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $profile = $this->userService->getProfile($userData->getId());
 
         return new JsonResponse($profile);
     }

@@ -1,7 +1,9 @@
 <?php
 namespace App\Service;
 
+use App\Dto\Request\User\ProfileRequest;
 use App\Entity\User;
+use App\Entity\UserData;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -54,11 +56,11 @@ class EmailService
 
     /**
      * @param string $template
-     * @param User $user
+     * @param UserData $user
      * @param string $subject
      * @param array $templateVariables
      */
-    public function sendToUser(string $template, User $user, string $subject, array $templateVariables = []): void
+    public function sendToUser(string $template, ProfileRequest $user, string $subject, array $templateVariables = []): void
     {
         $this->send(
             $template,

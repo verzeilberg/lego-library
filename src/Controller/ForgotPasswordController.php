@@ -18,22 +18,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ForgotPasswordController extends AbstractController
 {
-    private $userRepository;
-    private $entityManager;
-    private $mailer;
-
     private readonly UserService $userService;
 
     public function __construct(
-        UserRepository $userRepository,
-        EntityManagerInterface $entityManager,
-        MailerInterface $mailer,
         UserService $userService
     )
     {
-        $this->userRepository = $userRepository;
-        $this->entityManager = $entityManager;
-        $this->mailer = $mailer;
         $this->userService = $userService;
     }
 

@@ -26,6 +26,7 @@ api_platform:
                 name: Authorization
                 type: header
     graphql:
+        graphql_playground: false
         graphiql:
             enabled: false
     # Rest of the settings removed for brevity

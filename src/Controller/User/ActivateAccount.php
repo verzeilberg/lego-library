@@ -1,11 +1,9 @@
 <?php
 namespace App\Controller\User;
 
-use App\Entity\User;
-use App\Exception\NotFoundException;
 use App\Service\UserService;
-use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -16,17 +14,17 @@ class ActivateAccount extends AbstractController
     /**
      * @param UserService $userService
      */
-    public function __construct(private UserService $userService) {}
+    public function __construct(private readonly UserService $userService) {}
 
     /**
-     * @param Request $request
+     * Handles the invocation of the object.
      *
-     * @return User
+     * @param Request $request The HTTP request instance.
      *
-     * @throws NotFoundException|Exception
+     * @return JsonResponse The JSON response after processing the token code.
      */
-    public function __invoke(Request $request): User
+    public function __invoke(Request $request): JsonResponse
     {
-        return $this->userService->activate($request->attributes->get('dto'));
+        return $this->userService->checkTokenCode($request->attributes->get('dto'));
     }
 }

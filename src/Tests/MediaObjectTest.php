@@ -3,22 +3,52 @@
 
 namespace App\Tests;
 
-use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use App\Entity\MediaObject;
+use App\Entity\User;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\VarDumper\VarDumper;
 
-class MediaObjectTest extends ApiTestCase
+class MediaObjectTest extends BaseTest
 {
 
-    public function testCreateAMediaObject(): void
+    public function testUploadImageToUserDateObject(): void
     {
-        // The file "image.jpg" is the folder fixtures which is in the project dir
-        $file = new UploadedFile(__DIR__ . '/../../fixtures/image.jpg', 'image.jpg');
+
         $client = self::createClient();
 
-        $client->request('POST', 'http://localhost:8888/api/media_objects', [
-            'headers' => ['Content-Type' => 'multipart/form-data'],
+        $options = [
+            'times' => 1,
+            'password' => 'Gravity35#',
+            'active' => true,
+        ];
+        $this->loadFixtures($options);
+
+        $user = $this->getEntityManager()
+            ->getRepository(User::class)
+            ->findAll();
+
+        // retrieve a token
+        $response = $client->request('POST', 'http://legolibrary-dev/api/login', [
+            'headers' => ['Content-Type' => 'application/json'],
+            'json' => [
+                'email' => $user[0]->getEmail(),
+                'password' => 'Gravity35#',
+            ],
+        ]);
+
+        $json = $response->toArray();
+        $token = $json['token'];
+
+        //Copy file to temp folder
+        $uploadedFilePath = sys_get_temp_dir() . '/test_image.jpg';
+        copy(__DIR__ . '/../../fixtures/image.jpg', $uploadedFilePath);
+        // The file "image.jpg" is the folder fixtures which is in the project dir
+        $file = new UploadedFile($uploadedFilePath, 'image.jpg', null, null, false);
+
+        $response = $client->request('POST', 'http://legolibrary-dev/api/user/media_objects', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'multipart/form-data'
+            ],
             'extra' => [
                 // If you have additional fields in your MediaObject entity, use the parameters.
                 'parameters' => [
@@ -29,10 +59,11 @@ class MediaObjectTest extends ApiTestCase
                 ],
             ]
         ]);
+
+        $json = $response->toArray();
+        $this->assertArrayHasKey('profilePicture', $json);
         $this->assertResponseIsSuccessful();
         $this->assertMatchesResourceItemJsonSchema(MediaObject::class);
-        $this->assertJsonContains([
-            // 'title' => 'My file uploaded',
-        ]);
+
     }
 }

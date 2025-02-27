@@ -37,12 +37,8 @@ class CheckTokenCodeController extends AbstractController
         $this->userService = $userService;
     }
 
-    #[Route('/api/forgot-password', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
     {
-        return $this->userService->checkTokenCode(
-            $request->query->get('token'),
-            $request->query->get('code')
-        );
+        return $this->userService->checkTokenCode($request->attributes->get('dto'));
     }
 }

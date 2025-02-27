@@ -2,41 +2,43 @@
 
 namespace App\Tests;
 
-use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use App\Entity\User;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasher;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
-class AuthenticationTest extends ApiTestCase
+class AuthenticationTest extends BaseTest
 {
-
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
     public function testLogin(): void
     {
         $client = self::createClient();
-        $container = self::getContainer();
 
-        $user = new User();
-        $user->setEmail('test2@example.com');
-        $user->setUserName('test');
-        $user->setFirstName('tester');
-        $user->setLastName('testing');
+        $options = [
+            'times' => 1,
+            'password' => 'Gravity35#',
+            'active' => true,
+        ];
+        $this->loadFixtures($options);
 
-        $user->setPassword(
-            $container->get('security.user_password_hasher')->hashPassword($user, '$3CR3T')
-        );
-
-       // $user->setPassword('$2y$13$56yXxg2we6XHB.SHfFc6p.B0Au3tcuo9vEkLudnJmrrhGQ4YB8kpm');
-
-        $manager = $container->get('doctrine')->getManager();
-        $manager->persist($user);
-        $manager->flush();
+        $user = $this->getEntityManager()
+            ->getRepository(User::class)
+            ->findAll();
 
         // retrieve a token
-        $response = $client->request('POST', 'https://127.0.0.1/auth', [
+        $response = $client->request('POST', 'http://legolibrary-dev/api/login', [
             'headers' => ['Content-Type' => 'application/json'],
             'json' => [
-                'email' => 'test2@example.com',
-                'password' => '$3CR3T',
+                'email' => $user[0]->getEmail(),
+                'password' => 'Gravity35#',
             ],
         ]);
 
@@ -44,12 +46,14 @@ class AuthenticationTest extends ApiTestCase
         $this->assertResponseIsSuccessful();
         $this->assertArrayHasKey('token', $json);
 
-        // test not authorized
-        $client->request('GET', 'https://127.0.0.1:8080/api/books');
+        $userDataId = $user[0]->getUserData()->getId();
+
+        //Testing if we're getting a 401 because we don't send the token
+        $client->request('GET', 'http://legolibrary-dev/api/user-data/'. $userDataId);
         $this->assertResponseStatusCodeSame(401);
 
-        // test authorized
-        $client->request('GET', 'https://127.0.0.1:8080/api/books', ['auth_bearer' => $json['token']]);
+        //Testing if we're getting a 200 because we send the token with the request
+        $client->request('GET', 'http://legolibrary-dev/api/user-data/'. $userDataId, ['auth_bearer' => $json['token']]);
         $this->assertResponseIsSuccessful();
     }
 }

@@ -6,33 +6,44 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
-class PasswordResetToken
+#[ORM\Index(columns: ['token'], name: 'token_idx', options: ['lengths' => [255]])]
+class UserToken
 {
+
+    CONST TYPE_USER_ACTIVATION  = 1;
+    CONST TYPE_PASSWORD_RESET   = 2;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private $id;
+    private int $id;
 
-    #[ORM\Column(type: 'string', length: 255, unique: true)]
-    private $token;
+    #[ORM\Column(type: 'text')]
+    private string $token;
 
     #[ORM\Column(type: 'integer', length: 4, unique: false)]
-    private $code;
+    private int $code;
 
     #[ORM\Column(type: 'datetime')]
-    private $expiresAt;
+    private \DateTime $expiresAt;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private $user;
+    private User $user;
 
-    public function __construct(User $user)
+    #[ORM\Column(type: 'integer', length: 1, unique: false)]
+    private int $type;
+
+    public function __construct(User $user, $token, $code, $type, $expiresAt = null)
     {
-        $this->user = $user;
-        $this->token = Uuid::v4()->toRfc4122(); // Use UUID for token generation
-        $this->code = rand(1000, 9999);
-        $this->expiresAt = new \DateTime('+1 hour'); // Token expires in 1 hour
+        $this->user         = $user;
+        $this->token        = $token;
+        $this->code         = $code;
+        $this->type         = $type;
+        $this->expiresAt    = $expiresAt??new \DateTime('+1 hour'); // The Token expires in 1 hour
     }
+
+
 
     public function getToken(): string
     {
@@ -42,7 +53,7 @@ class PasswordResetToken
     /**
      * @return mixed
      */
-    public function getCode()
+    public function getCode(): mixed
     {
         return $this->code;
     }
@@ -81,6 +92,22 @@ class PasswordResetToken
     public function setExpiresAt(\DateTime $expiresAt): void
     {
         $this->expiresAt = $expiresAt;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param mixed $type
+     */
+    public function setType($type): void
+    {
+        $this->type = $type;
     }
 
 

@@ -36,7 +36,6 @@ class AuthController extends AbstractController
 
     public function login(Request $request): JsonResponse
     {
-
         $postedData = json_decode($request->getContent(), true);
         $email = $postedData['email'];
         $password = $postedData['password'];
@@ -45,10 +44,10 @@ class AuthController extends AbstractController
         $user = $this->userRepository->findOneBy(['email' => $email]);
 
         if (!$user || !$this->passwordEncoder->isPasswordValid($user, $password)) {
-            return new JsonResponse(['error' => 'Invalid credentialdsddddddxxxs'], JsonResponse::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
-        // Check if account is activated
+        // Check if an account is activated
         if (!$user->isActive()) {
             return new JsonResponse(['error' => 'Account is not activated'], JsonResponse::HTTP_FORBIDDEN);
         }

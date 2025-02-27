@@ -1,9 +1,10 @@
 {% extends "emails/base.text.twig" %}
 
 {% block content %}
-    Hi {{ user.firstName }},
-    Thanks for signing up for an account for the Stock Portfolio app. To activate your account please copy and paste the following link in your browser:
-    {{ activationLink }}
+    Hallo {{ user.firstName }},
+    Bedankt dat u een account heeft aangemaakt voor de LEgo library app. Vul onderstaande code in de app om uw account
+    te activeren en in te loggen:
+    {{ tokenCode }}
 
-    After activating your account you can use the service.
+    Nadat u uw account heeft geactiveerd, kunt u de service gebruiken.
 {% endblock %}

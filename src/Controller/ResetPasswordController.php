@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\PasswordResetTokenRepository;
 use App\Repository\UserRepository;
+use App\Repository\UserTokenRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,7 +19,7 @@ class ResetPasswordController extends AbstractController
     private $entityManager;
     private $passwordHasher;
 
-    public function __construct(PasswordResetTokenRepository $tokenRepository, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher)
+    public function __construct(UserTokenRepository $tokenRepository, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher)
     {
         $this->tokenRepository = $tokenRepository;
         $this->entityManager = $entityManager;

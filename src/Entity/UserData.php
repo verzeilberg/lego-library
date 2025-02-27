@@ -29,7 +29,7 @@ use ApiPlatform\OpenApi\Model;
     operations: [
         new GetCollection(),
         new Get(
-            uriTemplate: '/user-data/{id}',
+            uriTemplate: '/user-data/',
             defaults: [
                 'dto' => ProfileRequest::class
             ],
@@ -103,18 +103,26 @@ class UserData
     private string $lastName;
 
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\OneToOne(targetEntity: User::class, inversedBy: 'userData', cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner;
 
-    #[Vich\UploadableField(mapping: 'media_object', fileNameProperty: 'filePath')]
-    #[ApiProperty(types: ['https://schema.org/MediaObject'])]
-    #[Assert\NotNull]
-    #[\Symfony\Component\Validator\Constraints\File(maxSize: "1024k", mimeTypes: ["image/png", "image/jpeg"], mimeTypesMessage:"Alleen PDF bestanden zijn toegestaan." )]
+    #[ApiProperty(types: ['https://schema.org/contentUrl'])]
+    #[Groups(['userData:read'])]
+    public ?string $contentUrl = null;
+
+    #[Vich\UploadableField(
+        mapping: 'media_object',
+        fileNameProperty: 'filePath',
+    )]
+    #[Groups(['userData:write'])]
     public ?File $file = null;
 
     #[ORM\Column(nullable: true)]
     public ?string $filePath = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     public function getId(): ?int
     {
@@ -161,9 +169,15 @@ class UserData
         return $this->owner;
     }
 
-    public function setOwner(?User $owner): void
+    public function setOwner(?User $owner): self
     {
+        if ($owner !== null && $owner->getUserData() !== $this) {
+            $owner->getUserData($this);
+        }
+
         $this->owner = $owner;
+
+        return $this;
     }
 
     public function getContentUrl(): ?string
@@ -184,6 +198,11 @@ class UserData
     public function setFile(?File $file): void
     {
         $this->file = $file;
+
+        // Force Doctrine to update the entity when a new file is uploaded
+        if ($file) {
+            $this->updatedAt = new \DateTimeImmutable();
+        }
     }
 
     public function getFilePath(): ?string
@@ -196,6 +215,8 @@ class UserData
         $this->filePath = $filePath;
     }
 
-
-
+    public function setUpdatedAt(?\DateTimeInterface $updatedAt): void
+    {
+        $this->updatedAt = $updatedAt;
+    }
 }

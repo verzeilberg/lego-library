@@ -25,7 +25,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new Get(),
         new GetCollection(),
         new Post(
-            uriTemplate: '/user/{id}/media_objects',
+            uriTemplate: '/user/media_objects',
             types: ['https://schema.org/MediaObject'],
             outputFormats: ['jsonld' => ['application/ld+json']],
             controller: UploadImageController::class,

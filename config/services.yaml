@@ -29,3 +29,8 @@ services:
     App\State\UserPasswordHasher:
         bind:
             $processor: '@api_platform.doctrine.orm.state.persist_processor'
+    App\DataFixtures\UserFixtures:
+        arguments:
+            $jwtTokenManager: '@lexik_jwt_authentication.jwt_manager'
+            $tokenService: '@App\Service\TokenService'
+        public: true

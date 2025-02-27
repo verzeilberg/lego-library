@@ -2,8 +2,7 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiFilter;
-use ApiPlatform\Metadata\ApiProperty;
+use AllowDynamicProperties;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
@@ -15,25 +14,25 @@ use App\Controller\ForgotPasswordController;
 use App\Controller\ResetPasswordController;
 use App\Controller\User\ActivateAccount;
 use App\Controller\User\CheckTokenCodeController;
+use App\Controller\User\PatchController;
 use App\Controller\User\Register;
-use App\Dto\Request\User\ActivateAccountRequest;
+use App\Dto\Request\User\PatchRequest;
+use App\Dto\Request\User\PatchUserRequest;
+use App\Dto\Request\User\TokenCodeRequest;
 use App\Dto\Request\User\ForgotPasswordRequest;
 use App\Dto\Request\User\RegisterUserRequest;
 use App\Dto\Request\User\ResetPasswordRequest;
+use App\Repository\UserRepository;
+use App\State\UserPasswordHasher;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Repository\UserRepository;
-use App\Service\UserService;
-use App\State\UserPasswordHasher;
-use phpDocumentor\Reflection\DocBlock\Description;
-use phpDocumentor\Reflection\Type;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ApiResource(
+#[AllowDynamicProperties] #[ApiResource(
     shortName: 'User',
     description: 'Model User',
     operations: [
@@ -82,26 +81,44 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new Post(
             uriTemplate: '/public/user/activate',
+            formats: ['json' => ['application/json']],
             defaults: [
-                'dto' => ActivateAccountRequest::class
+                'dto' => TokenCodeRequest::class
             ],
             status: 204,
             controller: ActivateAccount::class,
-            input: ActivateAccountRequest::class,
-            output: ActivateAccountRequest::class,
+            input: TokenCodeRequest::class,
+            output: TokenCodeRequest::class,
             read: false,
             deserialize: false,
             name: 'activate',
         ),
-        new Get(
-            uriTemplate: '/public/user/check-forgot-password-code-token',
+        new Post(
+            uriTemplate: '/public/user/check-token-code',
+            formats: ['json' => ['application/json']],
+            defaults: [
+                'dto' => TokenCodeRequest::class
+            ],
             controller: CheckTokenCodeController::class,
             shortName: 'Forgot Password',
             description: 'Check token and code to reset password',
+            input: TokenCodeRequest::class,
+            output: TokenCodeRequest::class,
             name: 'check-forgot-password-code-token',
         ),
         new Put(processor: UserPasswordHasher::class),
-        new Patch(processor: UserPasswordHasher::class),
+        new Patch(
+            uriTemplate: '/user/patch',
+            defaults: [
+                'dto' => PatchRequest::class
+            ],
+            controller: PatchController::class,
+            description: 'Update user',
+            security: 'is_granted("ROLE_USER")',
+            input: PatchController::class,
+            output: PatchController::class,
+            name: 'patch-user'
+        ),
         new Delete(),
     ]
 )]
@@ -132,6 +149,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $active;
+
+    #[ORM\OneToOne(mappedBy: 'owner', targetEntity: UserData::class, cascade: ['persist', 'remove'])]
+    private ?UserData $userData = null;
 
     #[ORM\Column(type: 'json')]
     private array $roles = [];
@@ -234,6 +254,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setActive(bool $active): void
     {
         $this->active = $active;
+    }
+
+    public function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function getUserData(): ?UserData
+    {
+        return $this->userData;
+    }
+
+    public function setUserData(?UserData $userData): self
+    {
+        if ($userData !== null && $userData->getOwner() !== $this) {
+            $userData->setOwner($this);
+        }
+
+        $this->userData = $userData;
+
+        return $this;
     }
 
 }
