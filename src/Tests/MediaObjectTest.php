@@ -3,8 +3,8 @@
 
 namespace App\Tests;
 
-use App\Entity\MediaObject;
-use App\Entity\User;
+use App\Entity\Media\MediaObject;
+use App\Entity\User\User;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class MediaObjectTest extends BaseTest

@@ -3,11 +3,11 @@
 namespace App\DataFixtures;
 
 use App\Constant\JwtActions;
-use App\Entity\User;
-use App\Entity\UserData;
-use App\Entity\UserToken;
+use App\Entity\Lego\SetList;
+use App\Entity\User\User;
+use App\Entity\User\UserData;
+use App\Entity\User\UserToken;
 use App\Service\TokenService;
-use App\State\UserPasswordHasher;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
@@ -77,6 +77,18 @@ class UserFixtures extends Fixture
                 $userData->setOwner($user);
 
                 $manager->persist($userData);
+
+                if ($this->options['modelList'] === true) {
+                    for ($i = 1; $i <= $this->options['times']??10; $i++) {
+                        $modelList = new SetList();
+                        $modelList->setTitle($faker->text(30));
+                        $modelList->setDescription($faker->text());
+                        $modelList->setUserData($userData);
+                        $modelList->setPublicationDate(\DateTimeImmutable::createFromFormat('Y-m-d', $faker->date()));
+
+                        $manager->persist($modelList);
+                    }
+                }
             }
 
             if ($this->options['userToken'] === true) {
@@ -85,7 +97,6 @@ class UserFixtures extends Fixture
                 $userToken = new UserToken($user, $token, $code, $this->options['tokenType'], $this->options['expiresAt']);
                 $manager->persist($userToken);
             }
-
         }
 
         $manager->flush();

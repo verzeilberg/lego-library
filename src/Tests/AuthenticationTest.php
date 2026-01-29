@@ -2,7 +2,7 @@
 
 namespace App\Tests;
 
-use App\Entity\User;
+use App\Entity\User\User;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -49,11 +49,11 @@ class AuthenticationTest extends BaseTest
         $userDataId = $user[0]->getUserData()->getId();
 
         //Testing if we're getting a 401 because we don't send the token
-        $client->request('GET', 'http://legolibrary-dev/api/user-data/'. $userDataId);
+        $client->request('GET', 'http://legolibrary-dev/api/user-data/');
         $this->assertResponseStatusCodeSame(401);
 
         //Testing if we're getting a 200 because we send the token with the request
-        $client->request('GET', 'http://legolibrary-dev/api/user-data/'. $userDataId, ['auth_bearer' => $json['token']]);
+        $client->request('GET', 'http://legolibrary-dev/api/user-data/', ['auth_bearer' => $json['token']]);
         $this->assertResponseIsSuccessful();
     }
 }

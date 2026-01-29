@@ -7,7 +7,7 @@ security:
         # used to reload user from session & other features (e.g. switch_user)
         app_user_provider:
             entity:
-                class: App\Entity\User
+                class: App\Entity\User\User
                 property: email
 
     firewalls:
@@ -26,6 +26,9 @@ security:
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        refresh:
+            pattern: ^/api/token/refresh
+            stateless: true
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -42,6 +45,7 @@ security:
         - { path: ^/$, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI
         - { path: ^/api/public, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
         - { path: ^/api/docs, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI docs
         - { path: ^/api/, roles: IS_AUTHENTICATED_FULLY }
 

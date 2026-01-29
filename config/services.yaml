@@ -34,3 +34,14 @@ services:
             $jwtTokenManager: '@lexik_jwt_authentication.jwt_manager'
             $tokenService: '@App\Service\TokenService'
         public: true
+    App\Service\FileManager:
+      arguments:
+        $projectDir: '%kernel.project_dir%'
+    App\Service\Lego\RebrickableClient:
+      arguments:
+        $httpClient: '@http_client'
+        $apiKey: '%env(REBRICKABLE_API_KEY)%'
+        $apiBaseUrl: '%env(REBRICKABLE_API_URL)%'
+    App\Doctrine\TimestampableSubscriber:
+      tags:
+        - { name: doctrine.event_subscriber }

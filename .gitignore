@@ -1,4 +1,3 @@
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
@@ -36,3 +35,16 @@ yarn-error.log
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+###> custom ignores ###
+# PHPUnit test results and cache
+.phpunit.cache/
+
+# Uploaded user media
+/public/media/
+
+# IDE and system files
+.idea/
+.vscode/
+.DS_Store
+###< custom ignores ###

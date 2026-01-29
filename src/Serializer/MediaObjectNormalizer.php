@@ -2,10 +2,10 @@
 
 namespace App\Serializer;
 
-use App\Entity\MediaObject;
-use Vich\UploaderBundle\Storage\StorageInterface;
+use App\Entity\Media\MediaObject;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Vich\UploaderBundle\Storage\StorageInterface;
 
 class MediaObjectNormalizer implements NormalizerInterface
 {

@@ -3,9 +3,9 @@ api_platform:
     description: "This is a library to store your personal lego models"
     version: 1.0.0
     formats:
-        multipart: ['multipart/form-data']
-        jsonld: ['application/ld+json']
-        json: ['application/json']
+      multipart: ['multipart/form-data']
+      jsonld: ['application/ld+json']
+      json: ['application/json']
     docs_formats:
         jsonld: ['application/ld+json']
         json: ['application/json']

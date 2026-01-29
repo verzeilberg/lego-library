@@ -9,12 +9,11 @@
     <server name="SYMFONY_PHPUNIT_REMOVE" value=""/>
     <server name="SYMFONY_PHPUNIT_VERSION" value="11.5"/>
     <server name="KERNEL_CLASS" value="App\Kernel"/>
+    <env name="APP_ENV" value="test"/>
   </php>
-  <!--
   <testsuites>
-    <testsuite name="Project Test Suite">
-      <directory>tests</directory>
+    <testsuite name="Application Test Suite">
+      <directory>src/Tests</directory>
     </testsuite>
   </testsuites>
-  -->
 </phpunit>

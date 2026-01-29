@@ -2,30 +2,11 @@
 
 namespace App\Service;
 
-use App\Constant\JwtActions;
-use App\Dto\Request\User\TokenCodeRequest;
-use App\Dto\Request\User\ForgotPasswordRequest;
-use App\Dto\Request\User\ImageUploadRequest;
-use App\Dto\Request\User\ProfileRequest;
-use App\Dto\Request\User\RegisterUserRequest;
-use App\Entity\MediaObject;
 use App\Entity\PasswordResetToken;
-use App\Entity\User;
-use App\Entity\UserData;
-use App\Exception\NotFoundException;
 use App\Repository\PasswordResetTokenRepository;
-use App\Repository\UserDataRepository;
-use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\VarDumper\VarDumper;
 
 class TokenService
 {
@@ -47,7 +28,11 @@ class TokenService
         return $this->jwtManager->create($user);
     }
 
-
+    /**
+     * @param $jwtToken
+     * @return string
+     * @throws Exception
+     */
     public function generate4DigitCode($jwtToken): string
     {
         // Split the JWT token into its parts

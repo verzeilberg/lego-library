@@ -2,7 +2,7 @@
 namespace App\Dto\Request\User;
 
 use ApiPlatform\Metadata\ApiResource;
-use App\Entity\User;
+use App\Entity\User\User;
 use App\Validator\UniqueEntityDto;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;

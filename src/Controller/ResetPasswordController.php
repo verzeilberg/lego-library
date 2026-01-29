@@ -29,8 +29,6 @@ class ResetPasswordController extends AbstractController
     #[Route('/reset-password', methods: ['POST'])]
     public function __invoke(Request $request, ValidatorInterface $validator): JsonResponse
     {
-        die(' sdasdsd');
-
         $data = json_decode($request->getContent(), true);
         $token = $data['token'] ?? null;
         $code = $data['code'] ?? null;

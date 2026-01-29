@@ -2,14 +2,12 @@
 namespace App\Service;
 
 use App\Dto\Request\User\ProfileRequest;
-use App\Entity\User;
-use App\Entity\UserData;
+use App\Entity\User\UserData;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
-use Symfony\Component\VarDumper\VarDumper;
 
 /**
  * Service to send emails

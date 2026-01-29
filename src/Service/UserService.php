@@ -3,24 +3,23 @@
 namespace App\Service;
 
 use App\Constant\JwtActions;
-use App\Dto\Request\User\TokenCodeRequest;
 use App\Dto\Request\User\ForgotPasswordRequest;
 use App\Dto\Request\User\ImageUploadRequest;
 use App\Dto\Request\User\ProfileRequest;
 use App\Dto\Request\User\RegisterUserRequest;
-use App\Entity\MediaObject;
-use App\Entity\User;
-use App\Entity\UserData;
-use App\Entity\UserToken;
+use App\Dto\Request\User\TokenCodeRequest;
+use App\Entity\Media\MediaObject;
+use App\Entity\User\User;
+use App\Entity\User\UserData;
+use App\Entity\User\UserToken;
 use App\Exception\NotFoundException;
-use App\Repository\UserTokenRepository;
 use App\Repository\UserDataRepository;
 use App\Repository\UserRepository;
+use App\Repository\UserTokenRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 
@@ -30,6 +29,7 @@ class UserService
         private EntityManagerInterface                $entityManager,
         private readonly EmailService                 $emailService,
         private readonly TokenService                 $tokenService,
+        private readonly RefreshTokenService          $refreshTokenService,
         private readonly JWTTokenManagerInterface     $tokenManager,
         private readonly UserRepository               $userRepository,
         private readonly UserDataRepository           $userDataRepository,
@@ -57,7 +57,7 @@ class UserService
             $profile->setUserName($userData->getUserName());
             $profile->setFirstName($userData->getFirstName());
             $profile->setLastName($userData->getLastName());
-            $profile->setEmail($userData->getOwner()->getEmail());
+            $profile->setBio($userData->getBio());
             //Get the full file/image path
             $path = $this->uploaderHelper->asset($userData, 'file');
             $profile->setProfilePicture($path);
@@ -148,10 +148,12 @@ class UserService
         $this->entityManager->flush();
 
         $token = $this->tokenService->generateToken($user);
+        $refreshToken = $this->refreshTokenService->create($user->getId());
 
         return new JsonResponse(
             [
                 'token' => $token,
+                'refresh_token' => $refreshToken,
                 'message' => 'Account is activated',
             ]
         );

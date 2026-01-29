@@ -8,6 +8,8 @@ doctrine:
 
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
+        types:
+            uuid: Ramsey\Uuid\Doctrine\UuidType
     orm:
         controller_resolver:
             auto_mapping: true

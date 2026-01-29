@@ -2,15 +2,15 @@
 
 namespace App\Tests;
 
-use App\Entity\User;
-use App\Entity\UserToken;
+use App\Entity\User\User;
+use App\Entity\User\UserToken;
 use Exception;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Symfony\Component\HttpFoundation\Response;
 
 class AccountRegistrationTest extends BaseTest
 {
