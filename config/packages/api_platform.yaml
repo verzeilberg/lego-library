@@ -25,10 +25,7 @@ api_platform:
             JWT:
                 name: Authorization
                 type: header
-    graphql:
-        graphql_playground: false
-        graphiql:
-            enabled: false
+    graphql: ~
     # Rest of the settings removed for brevity
     exception_to_status:
         # The handlers are registered by default, keep those lines to prevent unexpected side effects
