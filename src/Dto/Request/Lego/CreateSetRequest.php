@@ -22,11 +22,11 @@ class CreateSetRequest
     #[Groups(['model:read', 'model:create', 'model:update'])]
     public string $legoNmbr;
 
-    #[Assert\NotBlank]
+    #[Assert\NotNull]
     #[Groups(['model:read', 'model:create', 'model:update'])]
     public bool $addLegoImages = false;
 
-    #[Assert\NotBlank]
+    #[Assert\NotNull]
     #[Groups(['model:read', 'model:create', 'model:update'])]
     public bool $addLegoParts = false;
 

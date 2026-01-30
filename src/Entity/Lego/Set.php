@@ -68,8 +68,6 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new Post(
             uriTemplate: '/lego/set-lists/{listId}/sets/{number}/add-images',
             controller: UploadSetImagesController::class,
-            shortName: 'Add images to lego set',
-            deserialize: false,
             openapi: new Model\Operation(
                 requestBody: new Model\RequestBody(
                     content: new \ArrayObject([
@@ -89,7 +87,9 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
                         ]
                     ])
                 )
-            )
+            ),
+            shortName: 'Add images to lego set',
+            deserialize: false
         ),
         new Delete(
             uriTemplate: '/lego/list/{bordid}/set/{setnr}',
@@ -162,7 +162,7 @@ class Set
     private ?string $contentUrl = null;
 
     /**
-     * Uploaded file for VichUploader processing.
+     * Uploaded a file for VichUploader processing.
      *
      * Not persisted directly—mapped to filePath.
      */
@@ -191,6 +191,12 @@ class Set
     private Collection $setParts;
 
     /**
+     * @var Collection<int, SetMinifig>
+     */
+    #[ORM\OneToMany(mappedBy: 'set', targetEntity: SetMinifig::class, cascade: ['persist', 'remove'])]
+    private Collection $setMinifigs;
+
+    /**
      * Links to SetList entities through SetListSet join table.
      *
      * @var Collection<int, SetListSet>
@@ -214,11 +220,17 @@ class Set
 
     /**
      * Computed image URLs exposed through the API.
-     *
      * Not persisted.
      */
     #[Groups(['lego_set:read'])]
     private array $images = [];
+
+    /**
+     * Show parts or not
+     * @var bool
+     */
+    #[Groups(['lego_set:read'])]
+    private bool $showParts;
 
     /**
      * Initializes Doctrine collections.
@@ -226,6 +238,7 @@ class Set
     public function __construct()
     {
         $this->setParts = new ArrayCollection();
+        $this->setMinifigs = new ArrayCollection();
         $this->listLinks = new ArrayCollection();
     }
 
@@ -238,7 +251,7 @@ class Set
      */
     public function getId(): string
     {
-        return $this->number;
+        return $this->baseNumber;
     }
 
     /**
@@ -246,7 +259,7 @@ class Set
      */
     public function setId(string $number): static
     {
-        $this->number = $number;
+        $this->baseNumber = $number;
 
         return $this;
     }
@@ -458,6 +471,30 @@ class Set
         return $this;
     }
 
+    public function getSetMinifigs(): Collection
+    {
+        return $this->setMinifigs;
+    }
+
+    public function addSetMinifig(SetMinifig $link): static
+    {
+        if (!$this->setMinifigs->contains($link)) {
+            $this->setMinifigs->add($link);
+            $link->setSet($this);
+        }
+        return $this;
+    }
+
+    public function removeSetMinifig(SetMinifig $link): static
+    {
+        if ($this->setMinifigs->removeElement($link)) {
+            if ($link->getSet() === $this) {
+                $link->setSet(null);
+            }
+        }
+        return $this;
+    }
+
     // ======================
     // Theme
     // ======================
@@ -481,7 +518,7 @@ class Set
     }
 
     /**
-     * Returns theme name for serialization.
+     * Returns a theme name for serialization.
      */
     #[Groups(['lego_set:read'])]
     public function getThemeName(): ?string
@@ -551,4 +588,24 @@ class Set
 
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isShowParts(): bool
+    {
+        return $this->showParts;
+    }
+
+    /**
+     * @param bool $showParts
+     * @return Set
+     */
+    public function setShowParts(bool $showParts): Set
+    {
+        $this->showParts = $showParts;
+        return $this;
+    }
+
+
 }

@@ -7,6 +7,7 @@ use App\Entity\Lego\Set;
 use App\Entity\Lego\SetListSet;
 use App\Entity\Media\MediaObject;
 use App\Repository\Lego\SetListRepository;
+use App\Repository\Lego\SetListSetRepository;
 use App\Repository\Lego\SetRepository;
 use App\Repository\Lego\ThemeRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,7 +20,9 @@ class SetService
     public function __construct(
         private readonly SetListRepository      $setListRepository,
         private readonly SetRepository          $setRepository,
+        private readonly SetListSetRepository   $setListSetRepository,
         private readonly PartService            $partService,
+        private readonly MinifigService         $minifigService,
         private readonly ThemeRepository        $themeRepository,
         private readonly RebrickableClient      $rebrickableClient,
         private readonly HttpClientInterface    $httpClient,
@@ -47,9 +50,6 @@ class SetService
         //Check if a set already exists
         $legoSet = $this->setRepository->findOneBy(['baseNumber' => $request->getLegoNmbr()]);
 
-
-
-
         if ($legoSet !== null) {
 
             $link = new SetListSet();
@@ -76,9 +76,6 @@ class SetService
             return new JsonResponse(['message' => 'No set matches the given set number'], 404);
         }
 
-
-
-
         //Get theme from Rebrickable API
         $legoTheme = $this->rebrickableClient->getThemeById($legoSet['theme_id']);
         //Get or create the theme
@@ -96,7 +93,7 @@ class SetService
         $set->setNumParts($legoSet['num_parts']);
         $set->setTheme($theme);
 
-        //Create a image and attach to a ssset.
+        //Create an image and attach to a ssset.
         $file = $this->createFileFromUrlStream($legoSet['set_img_url']);
         $set->setFile($file);
 
@@ -112,11 +109,11 @@ class SetService
         $this->entityManager->persist($set);
 
         //Check if the lego parts should be added
-            $legoParts = $this->rebrickableClient->getPartsBySetId($request->getLegoNmbr());
+        $legoParts = $this->rebrickableClient->getPartsBySetId($request->getLegoNmbr());
+        $set = $this->partService->createParts($set, $legoParts['results']);
 
-
-
-            $set = $this->partService->createParts($set, $legoParts['results']);
+        $legoMiniFigs = $this->rebrickableClient->getMiniFigsBySetNumber($request->getLegoNmbr());
+        $set = $this->minifigService->createMinifigs($set, $legoMiniFigs['results']);
 
         $this->entityManager->flush();
 
@@ -146,7 +143,17 @@ class SetService
             return new JsonResponse(['message' => 'Set list not found'], 404);
         }
 
-        $setList->removeSet($set);
+        // Find SetListSet by Set and SetList
+        $setListSet = $this->setListSetRepository->findOneBy([
+            'set' => $set,
+            'setList' => $setList,
+        ]);
+
+        if (!$setListSet) {
+            return new JsonResponse(['message' => 'Set list set not found'], 404);
+        }
+
+        $this->entityManager->remove($setListSet);
         $this->entityManager->flush();
 
         return new JsonResponse(

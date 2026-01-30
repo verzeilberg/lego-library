@@ -133,7 +133,33 @@ class RebrickableClient
     }
 
     /**
+     * @param string $setNum
      * @return array
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
+     */
+    public function getMiniFigsBySetNumber(string $setNum): array
+    {
+
+        // Check if the set number already contains a dash
+        $parts = explode('-', $setNum);
+        if (end($parts) !== '-1') {
+            $setNum .= '-1';
+        }
+
+        return $this->request("/sets/{$setNum}/minifigs/");
+    }
+
+    /**
+     * @return array
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
      */
     public function getThemes(): array
     {

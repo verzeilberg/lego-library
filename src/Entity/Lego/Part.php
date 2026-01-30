@@ -17,7 +17,7 @@ class Part
     #[Groups(['part:read', 'lego_set:read'])]
     private string $partNumber;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 400)]
     #[Groups(['part:read', 'lego_set:read'])]
     private string $name;
 
