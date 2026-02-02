@@ -44,6 +44,8 @@
         "symfony/webpack-encore-bundle": "^2.1",
         "symfony/yaml": "6.4.*",
         "symfonycasts/sass-bundle": "^0.6.0",
+        "twig/extra-bundle": "^2.12|^3.0",
+        "twig/twig": "^2.12|^3.0",
         "vich/uploader-bundle": "^2.4",
         "webonyx/graphql-php": "^15.11"
     },
