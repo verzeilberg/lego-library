@@ -94,6 +94,7 @@ class GetSetController extends AbstractController
 
         $set->setImages($images);
         $set->setShowParts($setListSet->isShowParts());
+        $set->setShowMinifigs($setListSet->isShowMinifigs());
 
         // Serialize entity fully, including setParts and relations
         $json = $serializer->serialize($set, 'json', [

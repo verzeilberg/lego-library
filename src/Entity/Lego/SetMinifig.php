@@ -17,6 +17,7 @@ class SetMinifig
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['lego_set:read', 'set_minifig:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Set::class, inversedBy: 'setMinifigs')]
@@ -30,9 +31,11 @@ class SetMinifig
 
     #[ORM\ManyToOne(targetEntity: Minifig::class, inversedBy: 'setLinks')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['lego_set:read', 'set_minifig:read'])]
     private ?Minifig $minifig = null;
 
     #[ORM\Column(type: 'smallint')]
+    #[Groups(['lego_set:read', 'set_minifig:read'])]
     private int $quantity = 1;
 
     public function getId(): ?int

@@ -6,7 +6,6 @@ use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ApiResource]
 final class SetListsRequest
 {
     #[Groups(['setList:read'])]

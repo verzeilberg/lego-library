@@ -14,19 +14,21 @@ use App\Controller\User\ReadUser;
 use App\Controller\User\UpdateUser;
 use App\Dto\Request\User\ProfileRequest;
 use App\Entity\Lego\SetList;
+use App\Entity\Lego\SetRating;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use ApiPlatform\Metadata\ApiProperty;
 
 #[Vich\Uploadable]
 #[ORM\Entity]
 #[ApiResource(
     shortName: 'User data',
-    description: 'Set UserData',
+    description: 'User profile data',
     operations: [
         new GetCollection(),
         new Get(
@@ -36,7 +38,6 @@ use ApiPlatform\Metadata\ApiProperty;
             security: 'is_granted("ROLE_USER") and object.getOwner() == user',
             output: ProfileRequest::class
         ),
-        // POST for creating / file upload
         new Post(
             defaults: ['dto' => ProfileRequest::class],
             openapi: new Model\Operation(
@@ -60,7 +61,7 @@ use ApiPlatform\Metadata\ApiProperty;
             ),
             security: "is_granted('ROLE_ADMIN') or user == object.getOwner()",
             input: ProfileRequest::class,
-            output: ProfileRequest::class,
+            output: ProfileRequest::class
         ),
         new Post(
             uriTemplate: '/user-data/edit',
@@ -78,10 +79,7 @@ use ApiPlatform\Metadata\ApiProperty;
                                     'firstName' => ['type' => 'string'],
                                     'lastName'  => ['type' => 'string'],
                                     'bio'       => ['type' => 'string'],
-                                    'file'      => [
-                                                    'type'      => 'string',
-                                                    'format'    => 'binary'
-                                    ]
+                                    'file'      => ['type' => 'string', 'format' => 'binary']
                                 ],
                             ]
                         ]
@@ -89,24 +87,28 @@ use ApiPlatform\Metadata\ApiProperty;
                 )
             ),
             normalizationContext: ['groups' => ['userData:read']],
-            deserialize: false,
+            deserialize: false
         ),
         new Delete(
             uriTemplate: '/user-data/delete',
             controller: DeleteUser::class,
             security: "is_granted('ROLE_ADMIN') or user == object.getOwner()"
         ),
-        new Put(security: "is_granted('ROLE_ADMIN') or user == object.getOwner()"),
+        new Put(security: "is_granted('ROLE_ADMIN') or user == object.getOwner()")
     ],
     normalizationContext: ['groups' => ['userData:read']],
     denormalizationContext: ['groups' => ['userData:update']]
 )]
 class UserData
 {
+    // ======================
+    // Properties
+    // ======================
+
     #[Groups(['userData:read'])]
     #[ORM\Id]
-    #[ORM\Column(type: 'integer')]
     #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
@@ -131,59 +133,85 @@ class UserData
 
     #[ApiProperty(types: ['https://schema.org/contentUrl'])]
     #[Groups(['userData:read'])]
-    public ?string $contentUrl = null;
+    private ?string $contentUrl = null;
 
     #[Vich\UploadableField(mapping: 'media_object_profile_picture', fileNameProperty: 'filePath')]
     #[Groups(['userData:update'])]
-    public ?File $file = null;
+    private ?File $file = null;
 
     #[ORM\Column(nullable: true)]
-    public ?string $filePath = null;
+    private ?string $filePath = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
+
+    #[ORM\OneToMany(targetEntity: SetRating::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $setRatings;
 
     #[ORM\OneToMany(mappedBy: 'userData', targetEntity: SetList::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $modelLists;
+
+    // ======================
+    // Constructor
+    // ======================
+
+    public function __construct()
+    {
+        $this->setRatings = new ArrayCollection();
+        $this->modelLists = new ArrayCollection();
+    }
+
+    // ======================
+    // Getters / Setters
+    // ======================
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function setId(?int $id): void
-    {
-        $this->id = $id;
-    }
-
-    public function getUserName(): string
+    public function getUserName(): ?string
     {
         return $this->userName;
     }
 
-    public function setUserName(string $userName): void
+    public function setUserName(?string $userName): self
     {
         $this->userName = $userName;
+        return $this;
     }
 
-    public function getFirstName(): string
+    public function getFirstName(): ?string
     {
         return $this->firstName;
     }
 
-    public function setFirstName(string $firstName): void
+    public function setFirstName(string $firstName): self
     {
         $this->firstName = $firstName;
+        return $this;
     }
 
-    public function getLastName(): string
+    public function getLastName(): ?string
     {
         return $this->lastName;
     }
 
-    public function setLastName(string $lastName): void
+    public function setLastName(string $lastName): self
     {
         $this->lastName = $lastName;
+        return $this;
+    }
+
+    public function getBio(): ?string
+    {
+        return $this->bio;
+    }
+
+    public function setBio(?string $bio): self
+    {
+        $this->bio = $bio;
+        return $this;
     }
 
     public function getOwner(): ?User
@@ -194,11 +222,9 @@ class UserData
     public function setOwner(?User $owner): self
     {
         if ($owner !== null && $owner->getUserData() !== $this) {
-            $owner->getUserData($this);
+            $owner->setUserData($this);
         }
-
         $this->owner = $owner;
-
         return $this;
     }
 
@@ -207,9 +233,10 @@ class UserData
         return $this->contentUrl;
     }
 
-    public function setContentUrl(?string $contentUrl): void
+    public function setContentUrl(?string $contentUrl): self
     {
         $this->contentUrl = $contentUrl;
+        return $this;
     }
 
     public function getFile(): ?File
@@ -217,14 +244,13 @@ class UserData
         return $this->file;
     }
 
-    public function setFile(?File $file): void
+    public function setFile(?File $file): self
     {
         $this->file = $file;
-
-        // Force Doctrine to update the entity when a new file is uploaded
         if ($file) {
             $this->updatedAt = new \DateTimeImmutable();
         }
+        return $this;
     }
 
     public function getFilePath(): ?string
@@ -232,47 +258,77 @@ class UserData
         return $this->filePath;
     }
 
-    public function setFilePath(?string $filePath): void
+    public function setFilePath(?string $filePath): self
     {
         $this->filePath = $filePath;
+        return $this;
     }
 
-    public function setUpdatedAt(?\DateTimeInterface $updatedAt): void
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+        return $this;
     }
 
-    public function addModelList(SetList $modelList): void
+    /**
+     * @return Collection<int, SetRating>
+     */
+    public function getSetRatings(): Collection
     {
-        if (!$this->modelLists->contains($modelList)) {
-            $this->modelLists[] = $modelList;
-            $modelList->setUserData($this); // Ensure bidirectional relationship
-        }
+        return $this->setRatings;
     }
 
-    public function getModelLists(): iterable
+    public function addSetRating(SetRating $rating): self
+    {
+        if (!$this->setRatings->contains($rating)) {
+            $this->setRatings->add($rating);
+            $rating->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeSetRating(SetRating $rating): self
+    {
+        if ($this->setRatings->removeElement($rating) && $rating->getUser() === $this) {
+            $rating->setUser(null);
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SetList>
+     */
+    public function getModelLists(): Collection
     {
         return $this->modelLists;
     }
 
-    public function setModelLists(iterable $modelLists): void
+    public function addModelList(SetList $list): self
     {
-        $this->modelLists = $modelLists;
+        if (!$this->modelLists->contains($list)) {
+            $this->modelLists->add($list);
+            $list->setUserData($this);
+        }
+        return $this;
     }
 
-    public function getBio(): null|string
+    public function removeModelList(SetList $list): self
     {
-        return $this->bio;
+        if ($this->modelLists->removeElement($list)) {
+            $list->setUserData(null);
+        }
+        return $this;
     }
 
-    public function setBio(string $bio): void
+    public function removeFile(): self
     {
-        $this->bio = $bio;
-    }
-
-    public function removeFile(): void
-    {
-        $this->file = null; // signals to Vich "remove file"
+        $this->file = null;
         $this->updatedAt = new \DateTimeImmutable();
+        return $this;
     }
 }

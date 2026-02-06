@@ -1,4 +1,5 @@
 framework:
-  mailer:
-    envelope:
-      recipients: ['infoverzeilberg@gmail.com']
+    mailer:
+        # Force all emails in dev to your Gmail test address
+        envelope:
+            recipients: ['testapiverzeilberg@gmail.com']

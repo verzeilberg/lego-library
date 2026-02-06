@@ -22,19 +22,19 @@ class Minifig
 {
     #[ORM\Id]
     #[ORM\Column(type: 'integer', unique: true)]
-    #[Groups(['lego_minifig:read','lego_minifig:write'])]
+    #[Groups(['lego_set:read', 'set_minifig:read', 'lego_minifig:read'])]
     private int $id;
 
     #[ORM\Column(type: 'string', length: 50, unique: true)]
-    #[Groups(['lego_minifig:read','lego_minifig:write'])]
+    #[Groups(['lego_set:read', 'set_minifig:read', 'lego_minifig:read'])]
     private string $setNumId;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Groups(['lego_minifig:read','lego_minifig:write'])]
+    #[Groups(['lego_set:read', 'set_minifig:read', 'lego_minifig:read'])]
     private string $name;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Groups(['lego_minifig:read','lego_minifig:write'])]
+    #[Groups(['lego_set:read', 'set_minifig:read', 'lego_minifig:read'])]
     private ?string $imageUrl = null;
 
     /**

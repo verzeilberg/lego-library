@@ -11,8 +11,14 @@ use App\Repository\Lego\SetListSetRepository;
 use App\Repository\Lego\SetRepository;
 use App\Repository\Lego\ThemeRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class SetService
@@ -33,11 +39,11 @@ class SetService
     /**
      * @param CreateSetRequest $request
      * @return JsonResponse
-     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface|ORMException
      */
     public function createSetByNumber(CreateSetRequest $request): JsonResponse
     {
@@ -56,10 +62,14 @@ class SetService
             $link->setSet($legoSet);
             $link->setSetList($setList);
             $link->setShowImages($request->isAddLegoImages());
+            $link->setShowMinifigs($request->isAddLegoMinifigs());
             $link->setShowParts($request->isAddLegoParts());
 
             $this->entityManager->persist($link);
             $this->entityManager->flush();
+
+
+            die('ddsadas');
 
             return new JsonResponse(
                 [
@@ -102,6 +112,7 @@ class SetService
         $link->setSet($set);
         $link->setSetList($setList);
         $link->setShowImages($request->isAddLegoImages());
+        $link->setShowMinifigs($request->isAddLegoMinifigs());
         $link->setShowParts($request->isAddLegoParts());
 
         $this->entityManager->persist($set);
@@ -127,8 +138,8 @@ class SetService
     }
 
     /**
-     * @param $setId
-     * @param $bordId
+     * @param string $bordId
+     * @param string $setId
      * @return JsonResponse
      */
     public function deleteSetFromSetList(string $bordId, string $setId): JsonResponse

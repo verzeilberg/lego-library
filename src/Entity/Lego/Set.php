@@ -63,7 +63,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             shortName: 'Create lego set',
             input: CreateSetRequest::class,
             output: CreateSetRequest::class,
-            deserialize: true
+            deserialize: true,
         ),
         new Post(
             uriTemplate: '/lego/set-lists/{listId}/sets/{number}/add-images',
@@ -97,7 +97,8 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             shortName: 'Delete lego set from lego list',
             deserialize: true
         ),
-    ]
+    ],
+    normalizationContext: ['groups' => ['lego_set:read', 'set_minifig:read']],
 )]
 class Set
 {
@@ -177,6 +178,17 @@ class Set
     #[Groups(['lego_set:read'])]
     private ?string $filePath = null;
 
+
+    /**
+     * @var Collection
+     */
+    #[ORM\OneToMany(
+        targetEntity: SetRating::class,
+        mappedBy: 'set',
+        orphanRemoval: true
+    )]
+    private Collection $ratings;
+
     /**
      * Parts belonging to this set.
      *
@@ -194,6 +206,7 @@ class Set
      * @var Collection<int, SetMinifig>
      */
     #[ORM\OneToMany(mappedBy: 'set', targetEntity: SetMinifig::class, cascade: ['persist', 'remove'])]
+    #[Groups(['lego_set:read'])]
     private Collection $setMinifigs;
 
     /**
@@ -233,10 +246,18 @@ class Set
     private bool $showParts;
 
     /**
+     * Show minifigs or not
+     * @var bool
+     */
+    #[Groups(['lego_set:read'])]
+    private bool $showMinifigs;
+
+    /**
      * Initializes Doctrine collections.
      */
     public function __construct()
     {
+        $this->ratings = new ArrayCollection();
         $this->setParts = new ArrayCollection();
         $this->setMinifigs = new ArrayCollection();
         $this->listLinks = new ArrayCollection();
@@ -335,6 +356,36 @@ class Set
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, SetRating>
+     */
+    public function getRatings(): Collection
+    {
+        return $this->ratings;
+    }
+
+    public function addRating(SetRating $rating): self
+    {
+        if (!$this->ratings->contains($rating)) {
+            $this->ratings->add($rating);
+            $rating->setSet($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRating(SetRating $rating): self
+    {
+        if ($this->ratings->removeElement($rating)) {
+            if ($rating->getSet() === $this) {
+                $rating->setSet(null);
+            }
+        }
+
+        return $this;
+    }
+
 
     /**
      * Returns number of parts.
@@ -607,5 +658,21 @@ class Set
         return $this;
     }
 
+    /**
+     * @return bool
+     */
+    public function isShowMinifigs(): bool
+    {
+        return $this->showMinifigs;
+    }
 
+    /**
+     * @param bool $showMinifigs
+     * @return Set
+     */
+    public function setShowMinifigs(bool $showMinifigs): Set
+    {
+        $this->showMinifigs = $showMinifigs;
+        return $this;
+    }
 }

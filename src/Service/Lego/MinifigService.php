@@ -42,16 +42,23 @@ readonly class MinifigService
      * @throws DecodingExceptionInterface
      * @throws ClientExceptionInterface
      */
-    public function createMinifigs(Set $set, array $items): Set
+    public function createMinifigs(Set $set, array $items, int $batchSize = 50): Set
     {
+        // Cache existing minifigs for fast lookup
+        $existingMinifigs = [];
+        foreach ($set->getSetMinifigs() as $link) {
+            $existingMinifigs[$link->getMinifig()->getId()] = $link;
+        }
+
+        $i = 0;
         foreach ($items as $item) {
+            $minifigId = $item['id'];
 
             // 1. Find or create Minifig
-            $minifig = $this->minifigRepository->find($item['id']);
-
+            $minifig = $this->minifigRepository->find($minifigId);
             if (!$minifig) {
                 $minifig = new Minifig();
-                $minifig->setId($item['id']);
+                $minifig->setId($minifigId);
                 $minifig->setSetNumId($item['set_num']);
                 $minifig->setName($item['set_name']);
                 $minifig->setImageUrl($item['set_img_url']);
@@ -59,18 +66,10 @@ readonly class MinifigService
                 $this->entityManager->persist($minifig);
             }
 
-            // 2. Check existing join row
-            $existingLink = null;
-
-            foreach ($set->getSetMinifigs() as $link) {
-                if ($link->getMinifig()->getId() === $minifig->getId()) {
-                    $existingLink = $link;
-                    break;
-                }
-            }
-
-            // 3. Create join if missing
-            if (!$existingLink) {
+            // 2. Check existing join row using cache
+            if (isset($existingMinifigs[$minifigId])) {
+                $link = $existingMinifigs[$minifigId];
+            } else {
                 $link = new SetMinifig();
                 $link->setSet($set);
                 $link->setMinifig($minifig);
@@ -79,15 +78,25 @@ readonly class MinifigService
                 $minifig->addSetLink($link);
 
                 $this->entityManager->persist($link);
-
-                $existingLink = $link;
+                $existingMinifigs[$minifigId] = $link;
             }
 
-            // 4. Set quantity
-            $existingLink->setQuantity($item['quantity'] ?? 1);
+            // 3. Set quantity
+            $link->setQuantity($item['quantity'] ?? 1);
+
+            $i++;
+
+            // 4. Batch flush
+            if ($i % $batchSize === 0) {
+                $this->entityManager->flush();
+            }
         }
+
+        // Flush any remaining entities
+        $this->entityManager->flush();
 
         return $set;
     }
+
 
 }

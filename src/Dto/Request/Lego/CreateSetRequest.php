@@ -8,7 +8,6 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\File;
 
-#[ApiResource]
 class CreateSetRequest
 {
 
@@ -29,6 +28,10 @@ class CreateSetRequest
     #[Assert\NotNull]
     #[Groups(['model:read', 'model:create', 'model:update'])]
     public bool $addLegoParts = false;
+
+    #[Assert\NotNull]
+    #[Groups(['model:read', 'model:create', 'model:update'])]
+    public bool $addLegoMinifigs = false;
 
     /**
      * @return string
@@ -101,5 +104,25 @@ class CreateSetRequest
         $this->addLegoParts = $addLegoParts;
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isAddLegoMinifigs(): bool
+    {
+        return $this->addLegoMinifigs;
+    }
+
+    /**
+     * @param bool $addLegoMinifigs
+     * @return CreateSetRequest
+     */
+    public function setAddLegoMinifigs(bool $addLegoMinifigs): CreateSetRequest
+    {
+        $this->addLegoMinifigs = $addLegoMinifigs;
+        return $this;
+    }
+
+
 
 }

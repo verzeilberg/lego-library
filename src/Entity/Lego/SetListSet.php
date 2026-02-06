@@ -83,6 +83,16 @@ class SetListSet
     private bool $showParts = true;
 
     /**
+     * Controls whether minifigs for this set are rendered
+     * inside the list UI.
+     */
+    #[ORM\Column(type: 'boolean')]
+    private bool $showMinifigs = true;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $complete = true;
+
+    /**
      * Media objects attached to this set inside the list.
      *
      * Cascade:
@@ -187,6 +197,42 @@ class SetListSet
     {
         $this->showParts = $showParts;
 
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShowMinifigs(): bool
+    {
+        return $this->showMinifigs;
+    }
+
+    /**
+     * @param bool $showMinifigs
+     * @return SetListSet
+     */
+    public function setShowMinifigs(bool $showMinifigs): SetListSet
+    {
+        $this->showMinifigs = $showMinifigs;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isComplete(): bool
+    {
+        return $this->complete;
+    }
+
+    /**
+     * @param bool $complete
+     * @return SetListSet
+     */
+    public function setComplete(bool $complete): SetListSet
+    {
+        $this->complete = $complete;
         return $this;
     }
 

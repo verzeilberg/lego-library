@@ -1,7 +1,7 @@
 framework:
     mailer:
-        dsn: '%env(MAILER_DSN)%'
+        dsn: '%env(MAILER_DSN)%'         # Uses .env (production) by default
         envelope:
-            sender: 'infoverzeilberg@gmail.com'
+            sender: 'infoverzeilberg@gmail.com'   # SMTP sender address
         headers:
-                from: 'Sander <infoverzeilberg@gmail.com>'
+            from: 'Sander <infoverzeilberg@gmail.com>' 

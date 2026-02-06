@@ -8,7 +8,6 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[UniqueEntityDto(field: 'email', entityClass: User::class, existsMessage: 'A user with this email address already exists')]
-#[ApiResource]
 class RegisterUserRequest
 {
     #[Assert\NotBlank]
