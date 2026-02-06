@@ -150,10 +150,10 @@ class Set
     /**
      * Aggregate user rating (0–5).
      */
-    #[ORM\Column(type: 'smallint')]
+    #[ORM\Column(type: 'decimal', precision: 2, scale: 1)]
     #[Assert\Range(min: 0, max: 5)]
     #[Groups(['lego_set:read'])]
-    private int $rating = 0;
+    private float $rating = 0.0;
 
     /**
      * Public content URL for primary image.
@@ -251,6 +251,12 @@ class Set
      */
     #[Groups(['lego_set:read'])]
     private bool $showMinifigs;
+
+    /**
+     * @var bool
+     */
+    #[Groups(['lego_set:read'])]
+    private int $personalRating;
 
     /**
      * Initializes Doctrine collections.
@@ -406,20 +412,20 @@ class Set
     }
 
     /**
-     * Returns rating value.
+     * @return float
      */
-    public function getRating(): int
+    public function getRating(): float
     {
         return $this->rating;
     }
 
     /**
-     * Sets rating value.
+     * @param float $rating
+     * @return Set
      */
-    public function setRating(int $rating): static
+    public function setRating(float $rating): Set
     {
         $this->rating = $rating;
-
         return $this;
     }
 
@@ -675,4 +681,26 @@ class Set
         $this->showMinifigs = $showMinifigs;
         return $this;
     }
+
+    /**
+     * @return int
+     */
+    public function getPersonalRating(): int
+    {
+        return $this->personalRating;
+    }
+
+    /**
+     * @param int $personalRating
+     * @return Set
+     */
+    public function setPersonalRating(int $personalRating): Set
+    {
+        $this->personalRating = $personalRating;
+        return $this;
+    }
+
+
+
+
 }

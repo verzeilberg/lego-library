@@ -274,11 +274,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setUserData(?UserData $userData): self
     {
-        if ($userData !== null && $userData->getOwner() !== $this) {
-            $userData->setOwner($this);
+        if ($this->userData === $userData) {
+            return $this;
         }
 
         $this->userData = $userData;
+
+        // only set owner if not already set
+        if ($userData !== null && $userData->getOwner() !== $this) {
+            $userData->setOwner($this);
+        }
 
         return $this;
     }

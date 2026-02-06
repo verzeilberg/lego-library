@@ -4,6 +4,7 @@ namespace App\Controller\Lego;
 
 use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetListSetRepository;
+use App\Repository\Lego\SetRatingRepository;
 use App\Repository\Lego\SetRepository;
 use App\Service\Lego\RebrickableClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,7 +21,8 @@ class GetSetController extends AbstractController
         private readonly RebrickableClient    $client,
         private readonly SetRepository        $setRepository,
         private readonly SetListRepository    $setListRepository,
-        private readonly SetListSetRepository $setListSetRepository
+        private readonly SetListSetRepository $setListSetRepository,
+        private readonly SetRatingRepository  $setRatingRepository
     )
     {
     }
@@ -95,6 +97,8 @@ class GetSetController extends AbstractController
         $set->setImages($images);
         $set->setShowParts($setListSet->isShowParts());
         $set->setShowMinifigs($setListSet->isShowMinifigs());
+        $personalRatingForSet = $this->setRatingRepository->getUserRatingForSet($user, $set) ?? 0;
+        $set->setPersonalRating($personalRatingForSet);
 
         // Serialize entity fully, including setParts and relations
         $json = $serializer->serialize($set, 'json', [

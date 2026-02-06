@@ -68,9 +68,6 @@ class SetService
             $this->entityManager->persist($link);
             $this->entityManager->flush();
 
-
-            die('ddsadas');
-
             return new JsonResponse(
                 [
                     'message' => 'Set added to list successfully',

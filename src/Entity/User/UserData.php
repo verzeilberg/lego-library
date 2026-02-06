@@ -221,10 +221,17 @@ class UserData
 
     public function setOwner(?User $owner): self
     {
+        if ($this->owner === $owner) {
+            return $this; // already set, prevent recursion
+        }
+
+        $this->owner = $owner;
+
+        // only set userData if not already set
         if ($owner !== null && $owner->getUserData() !== $this) {
             $owner->setUserData($this);
         }
-        $this->owner = $owner;
+
         return $this;
     }
 

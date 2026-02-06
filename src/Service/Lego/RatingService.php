@@ -41,8 +41,10 @@ class RatingService
 
         // 4️⃣ Optional: Update cached overall rating on Set
         $overall = $this->setRatingRepository->getOverallRatingForSet($set);
+        // Round to the nearest 0.5
+        $roundedOverall = round($overall * 2) / 2;
+        $set->setRating($roundedOverall); // store as smallint 0-5
 
-        $set->setRating((int) round($overall)); // store as smallint 0-5
         $this->em->persist($set);
         $this->em->flush();
 
