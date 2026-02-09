@@ -94,62 +94,6 @@ class SetListController extends AbstractController
     }
 
     /**
-     * Retrieves the model lists associated with the authenticated user.
-     *
-     * @param Request $request The HTTP request object.
-     * @param Security $security The security service to retrieve the current user.
-     *
-     * @return JsonResponse Returns a JSON response containing the user's model lists
-     *                      or an error message if the user is not found.
-     */
-    public function getSetListsByUser(Request $request, Security $security): JsonResponse
-    {
-        $user = $security->getUser();
-
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $userDataId = $user->getUserData()->getId();
-
-        // Fetch only top-level model lists (parentList IS NULL)
-        $setListsByUser = $this->setListRepository->findBy(
-            ['userData' => $userDataId, 'parentList' => null],
-            ['publicationDate' => 'DESC']
-        );
-
-        $setListsByUser = array_map(function ($set) {
-            $path = $this->uploaderHelper->asset($set, 'file');
-            return new SetListsRequest($set->getId(), $set->getTitle(), $set->getDescription(), $set->isPublic(), false, $path);
-        }, $setListsByUser);
-
-
-        return new JsonResponse($setListsByUser, Response::HTTP_OK);
-    }
-
-    public function getModelListById(Request $request, Security $security): JsonResponse
-    {
-
-        $user = $security->getUser();
-
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $id = $request->get('id');
-        $setList = $this->setListRepository->find($id);
-        if ($setList->getUserData()->getOwner() === $user) {
-            $path = $this->uploaderHelper->asset($setList, 'file');
-            $setListRequest = new SetListsRequest($setList->getId(), $setList->getTitle(), $setList->getDescription(), $path);
-
-            return new JsonResponse($setListRequest, Response::HTTP_OK);
-
-        } else {
-            return $this->json(['result' => 'Set list fetched unsuccessfully, user is not the owner of the model list'], Response::HTTP_UNAUTHORIZED);
-        }
-    }
-
-    /**
      * Retrieves the children set lists and associated sets for a given model list ID.
      *
      * This method fetches the children set lists from the SetListRepository

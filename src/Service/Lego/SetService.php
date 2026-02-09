@@ -64,6 +64,7 @@ class SetService
             $link->setShowImages($request->isAddLegoImages());
             $link->setShowMinifigs($request->isAddLegoMinifigs());
             $link->setShowParts($request->isAddLegoParts());
+            $link->setComplete(true);
 
             $this->entityManager->persist($link);
             $this->entityManager->flush();
@@ -111,6 +112,7 @@ class SetService
         $link->setShowImages($request->isAddLegoImages());
         $link->setShowMinifigs($request->isAddLegoMinifigs());
         $link->setShowParts($request->isAddLegoParts());
+        $link->setComplete(true);
 
         $this->entityManager->persist($set);
         $this->entityManager->persist($link);

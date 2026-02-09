@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\CreateSetController;
 use App\Controller\Lego\DeleteSetFromSetListController;
+use App\Controller\Lego\GetPartsBySetIdController;
 use App\Controller\Lego\GetSetController;
 use App\Controller\Lego\UploadSetImagesController;
 use App\Dto\Request\Lego\CreateSetRequest;
@@ -44,14 +45,14 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
     operations: [
         new Get(
             uriTemplate: '/lego/set-lists/{listId}/sets/{number}',
-            controller: GetSetController::class . '::getSetById',
+            controller: GetSetController::class,
             shortName: 'Get lego set by list id and set id',
             read: true,
             deserialize: true
         ),
         new Get(
             uriTemplate: '/lego/sets/{number}/parts',
-            controller: GetSetController::class . '::getPartsBySetId',
+            controller: GetPartsBySetIdController::class,
             shortName: 'Get lego parts by set number',
             read: false
         ),

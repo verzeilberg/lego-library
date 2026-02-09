@@ -2,6 +2,7 @@
 
 namespace App\Entity\Lego;
 
+use App\Repository\Lego\ColorRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 

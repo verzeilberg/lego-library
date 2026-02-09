@@ -9,8 +9,10 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\DeleteSetListController;
+use App\Controller\Lego\GetSetByIdController;
+use App\Controller\Lego\GetSetListChildrenAndSetsController;
+use App\Controller\Lego\GetSetListsByUserController;
 use App\Controller\Lego\SetListController;
-use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\User\UserData;
 use App\Repository\Lego\SetListRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -21,7 +23,6 @@ use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
-use App\Entity\Lego\Set as LegoModel;
 
 /** A model list. */
 #[Vich\Uploadable]
@@ -75,15 +76,15 @@ use App\Entity\Lego\Set as LegoModel;
         ),
         new Get(
             uriTemplate: '/set-list/get/{id}',
-            controller: SetListController::class.'::getModelListById',
+            controller: GetSetByIdController::class,
         ),
         new GetCollection(
             uriTemplate: '/set-lists',
-            controller: SetListController::class.'::getSetListsByUser',
+            controller: GetSetListsByUserController::class,
         ),
         new GetCollection(
             uriTemplate: '/set-lists/{id}',
-            controller: SetListController::class.'::getSetListChildrenAndSets',
+            controller: GetSetListChildrenAndSetsController::class,
         )
     ],
     normalizationContext: ['groups' => ['modelList:read']],

@@ -18,7 +18,6 @@ class GetSetController extends AbstractController
 {
 
     public function __construct(
-        private readonly RebrickableClient    $client,
         private readonly SetRepository        $setRepository,
         private readonly SetListRepository    $setListRepository,
         private readonly SetListSetRepository $setListSetRepository,
@@ -29,24 +28,12 @@ class GetSetController extends AbstractController
 
     /**
      * @param Request $request
-     * @return JsonResponse
-     */
-    public function getSets(Request $request): JsonResponse
-    {
-        // Optional query parameters: page, page_size, year, theme_id, etc.
-        $queryParams = $request->query->all();
-
-        $data = $this->client->getSets($queryParams);
-
-        return $this->json($data, 200, [], ['groups' => 'lego_set:read']);
-    }
-
-    /**
-     * @param Request $request
      * @param Security $security
+     * @param UploaderHelper $uploaderHelper
+     * @param SerializerInterface $serializer
      * @return JsonResponse
      */
-    public function getSetById(
+    public function __invoke(
         Request $request,
         Security $security,
         UploaderHelper $uploaderHelper,
@@ -107,49 +94,5 @@ class GetSetController extends AbstractController
         ]);
 
         return new JsonResponse($json, 200, [], true);
-    }
-
-
-    /**
-     * @param Request $request
-     * @param Security $security
-     * @return JsonResponse
-     */
-    public function getPartsBySetId(Request $request, Security $security): JsonResponse
-    {
-        $user = $security->getUser();
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], 404);
-        }
-
-        $setNumber = $request->get('id');
-        $data = $this->client->getPartsBySetId($setNumber);
-
-        return new JsonResponse($data);
-    }
-
-    public function getThemes(Request $request, Security $security)
-    {
-        $user = $security->getUser();
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], 404);
-        }
-
-        $data = $this->client->getThemes();
-
-        return new JsonResponse($data);
-    }
-
-    public function getThemeById(Request $request, Security $security)
-    {
-        $user = $security->getUser();
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], 404);
-        }
-
-        $themeId = $request->get('id');
-        $data = $this->client->getThemeById($themeId);
-
-        return new JsonResponse($data);
     }
 }
