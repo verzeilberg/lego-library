@@ -50,3 +50,5 @@ yarn-error.log
 ###< custom ignores ###
 
 /config/services_dev.yaml
+
+/config/packages/dev/*

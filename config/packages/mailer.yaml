@@ -4,4 +4,4 @@ framework:
         envelope:
             sender: 'info@verzeilberg.nl'
         headers:
-            from: 'Info <noreply@verzeilberg.nl>'
+            from: 'info <noreply@verzeilberg.nl>'

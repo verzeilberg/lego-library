@@ -2,7 +2,7 @@
 
 {% block content %}
     <p>Hallo {{ user.firstName }},</p>
-    <p>Bedankt dat u een account heeft aangemaakt voor de LEgo library app.</p>
+    <p>Bedankt dat u een account heeft aangemaakt voor de Lego library app.</p>
     <p>Vul onderstaande code in de app om uw account te activeren en in te loggen.</p>
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
         <tbody>
@@ -11,7 +11,17 @@
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                     <tbody>
                     <tr>
-                        <td> {{ tokenCode }} </td>
+                        <td style="
+    text-align:center;
+    padding:12px 24px;
+    font-size:18px;
+    font-weight:bold;
+    background-color:#f2f2f2;
+    border-radius:4px;
+    letter-spacing:2px;
+">
+                            {{ tokenCode }}
+                        </td>
                     </tr>
                     </tbody>
                 </table>
