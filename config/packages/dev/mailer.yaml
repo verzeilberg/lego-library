@@ -1,5 +1,0 @@
-framework:
-    mailer:
-        # Force all emails in dev to your Gmail test address
-        envelope:
-            recipients: ['testapiverzeilberg@gmail.com']
