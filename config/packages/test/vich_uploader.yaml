@@ -1,0 +1,6 @@
+vich_uploader:
+    mappings:
+        media_object_lego:
+            upload_destination: '%kernel.project_dir%/var/uploads/test/lego'
+        media_object_profile_picture:
+            upload_destination: '%kernel.project_dir%/var/uploads/test/profile'

@@ -46,8 +46,8 @@ class SetPart
 
     // === Getters / Setters ===
     public function getId(): ?UuidInterface { return $this->id; }
-    public function getModel(): Set { return $this->model; }
-    public function setModel(Set $model): self { $this->model = $model; return $this; }
+    public function getModel(): ?Set { return $this->model; }
+    public function setModel(?Set $model): self { $this->model = $model; return $this; }
     public function getPartColor(): PartColor { return $this->partColor; }
     public function setPartColor(PartColor $partColor): self { $this->partColor = $partColor; return $this; }
     public function getQuantity(): int { return $this->quantity; }

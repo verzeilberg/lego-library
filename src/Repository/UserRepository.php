@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User\User;
+use App\Service\EmailEncryptionService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
@@ -19,9 +20,16 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly EmailEncryptionService $encryptionService,
+    ) {
         parent::__construct($registry, User::class);
+    }
+
+    public function findByEmail(string $email): ?User
+    {
+        return $this->findOneBy(['emailHash' => $this->encryptionService->hash($email)]);
     }
 
     /**

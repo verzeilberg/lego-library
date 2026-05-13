@@ -109,7 +109,7 @@ class RebrickableClient
         return $this->request("/sets/{$setNum}/");
     }
 
-    public function getPartsBySetId(string $setNum): array
+    public function getPartsBySetId(string $setNum, $pageSize = 1000): array
     {
         // Check if the set number already contains a dash
         $parts = explode('-', $setNum);
@@ -117,7 +117,7 @@ class RebrickableClient
             $setNum .= '-1';
         }
 
-        return $this->request("/sets/{$setNum}/parts/");
+        return $this->request("/sets/{$setNum}/parts/?page_size={$pageSize}");
     }
 
     /**
@@ -151,6 +151,18 @@ class RebrickableClient
         }
 
         return $this->request("/sets/{$setNum}/minifigs/");
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    public function getMiniFigDetailsByMiniFigNumber(string $miniFigNum): array
+    {
+        return $this->request("/minifigs/{$miniFigNum}");
     }
 
     /**

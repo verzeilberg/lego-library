@@ -32,6 +32,7 @@ readonly class MinifigService
     public function __construct(
         private MinifigRepository $minifigRepository,
         private EntityManagerInterface $entityManager,
+        private RebrickableClient $rebrickableClient,
     )
     {}
 
@@ -50,12 +51,14 @@ readonly class MinifigService
             $existingMinifigs[$link->getMinifig()->getId()] = $link;
         }
 
+        $totalPartsMiniFigs = 0;
         $i = 0;
         foreach ($items as $item) {
             $minifigId = $item['id'];
 
             // 1. Find or create Minifig
-            $minifig = $this->minifigRepository->find($minifigId);
+            $minifig = $this->minifigRepository->find($minifigId)
+                ?? $this->minifigRepository->findOneBy(['setNumId' => $item['set_num']]);
             if (!$minifig) {
                 $minifig = new Minifig();
                 $minifig->setId($minifigId);
@@ -86,11 +89,18 @@ readonly class MinifigService
 
             $i++;
 
+            //Get the minifigs parts
+            $miniFigDetails = $this->rebrickableClient->getMiniFigDetailsByMiniFigNumber($minifig->getSetNumId());
+            $totalPartsMiniFigs = $totalPartsMiniFigs + $miniFigDetails['num_parts'];
+
             // 4. Batch flush
             if ($i % $batchSize === 0) {
                 $this->entityManager->flush();
             }
         }
+
+        //Set the total mini gigs parts
+        $set->setTotalMiniFigParts($totalPartsMiniFigs);
 
         // Flush any remaining entities
         $this->entityManager->flush();

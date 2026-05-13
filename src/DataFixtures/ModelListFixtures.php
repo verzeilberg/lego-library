@@ -43,9 +43,10 @@ class ModelListFixtures extends Fixture
             $modelList = new SetList();
             $modelList->setTitle($faker->jobTitle());
             $modelList->setDescription($faker->text());
-            $modelList->setUserData();
+            // userData is required but not available here; this fixture
+            // needs a UserData passed in before it can be persisted
 
-            $manager->persist($modelList);
+            // $manager->persist($modelList);
         }
 
         $manager->flush();

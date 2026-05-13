@@ -10,6 +10,7 @@ doctrine:
         use_savepoints: true
         types:
             uuid: Ramsey\Uuid\Doctrine\UuidType
+            encrypted_string: App\Doctrine\Type\EncryptedStringType
     orm:
         controller_resolver:
             auto_mapping: true

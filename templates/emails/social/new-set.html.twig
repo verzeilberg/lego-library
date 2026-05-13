@@ -1,0 +1,9 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block content %}
+<h2>Nieuwe set toegevoegd</h2>
+<p>Hoi {{ recipientName }},</p>
+<p>Je vriend <strong>{{ senderName }}</strong> heeft een nieuwe set toegevoegd aan <strong>{{ boardTitle }}</strong>:</p>
+<p><strong>{{ setName }}</strong></p>
+<p>Open de app om de set te bekijken.</p>
+{% endblock %}

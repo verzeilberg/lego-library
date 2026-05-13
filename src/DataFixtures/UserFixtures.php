@@ -7,6 +7,7 @@ use App\Entity\Lego\SetList;
 use App\Entity\User\User;
 use App\Entity\User\UserData;
 use App\Entity\User\UserToken;
+use App\Service\EmailEncryptionService;
 use App\Service\TokenService;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -32,7 +33,8 @@ class UserFixtures extends Fixture
     public function __construct(
         JWTTokenManagerInterface $jwtTokenManager,
         TokenService             $tokenService,
-        private readonly UserPasswordHasherInterface  $userPasswordHasher
+        private readonly UserPasswordHasherInterface  $userPasswordHasher,
+        private readonly EmailEncryptionService       $emailEncryptionService,
     )
     {
         $this->jwtTokenManager  = $jwtTokenManager;
@@ -60,7 +62,9 @@ class UserFixtures extends Fixture
 
         for ($i = 1; $i <= $this->options['times']??10; $i++) {
             $user = new User();
-            $user->setEmail($faker->email());
+            $email = $faker->email();
+            $user->setEmail($email);
+            $user->setEmailHash($this->emailEncryptionService->hash($email));
             $user->setPassword($this->userPasswordHasher->hashPassword($user, $this->options['password']??$faker->password()));
             if ($this->options['active']??false) {
                 $user->setActive(true);

@@ -8,10 +8,13 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
+use App\Controller\Lego\DeleteSetImageController;
 use App\Controller\Lego\DeleteSetListController;
 use App\Controller\Lego\GetSetByIdController;
 use App\Controller\Lego\GetSetListChildrenAndSetsController;
 use App\Controller\Lego\GetSetListsByUserController;
+use App\Controller\Lego\GetSetListsPublic;
+use App\Controller\Lego\SearchSetListsPublicController;
 use App\Controller\Lego\SetListController;
 use App\Entity\User\UserData;
 use App\Repository\Lego\SetListRepository;
@@ -74,12 +77,25 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             controller: DeleteSetListController::class,
             security: "is_granted('ROLE_ADMIN') or user == object.getUserData()->getOwner()"
         ),
+        new Delete(
+            uriTemplate: '/set-images/delete/{id}',
+            controller: DeleteSetImageController::class,
+            security: "is_granted('ROLE_ADMIN') or user == object.getUserData()->getOwner()"
+        ),
         new Get(
             uriTemplate: '/set-list/get/{id}',
             controller: GetSetByIdController::class,
         ),
         new GetCollection(
-            uriTemplate: '/set-lists',
+            uriTemplate: '/set-lists-public',
+            controller: GetSetListsPublic::class,
+        ),
+        new GetCollection(
+            uriTemplate: '/set-lists-public-search',
+            controller: SearchSetListsPublicController::class,
+        ),
+        new GetCollection(
+            uriTemplate: '/set-lists-for-user',
             controller: GetSetListsByUserController::class,
         ),
         new GetCollection(

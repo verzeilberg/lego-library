@@ -3,7 +3,9 @@
 namespace App\Controller\User;
 
 use App\Entity\User\UserData;
+use App\Enum\Geslacht;
 use App\Service\FileManager;
+use App\Service\ImageModerationService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,10 +21,11 @@ use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 class UpdateUser extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly UserService            $userService,
-        private readonly UploaderHelper         $uploaderHelper,
-        private readonly FileManager            $fileManager,
+        private readonly EntityManagerInterface  $entityManager,
+        private readonly UserService             $userService,
+        private readonly UploaderHelper          $uploaderHelper,
+        private readonly FileManager             $fileManager,
+        private readonly ImageModerationService  $moderationService,
     ) {}
 
     /**
@@ -45,10 +48,14 @@ class UpdateUser extends AbstractController
         $this->updateUserDataFromRequest($userData, $request);
 
         $imageFile = $request->files->get('file');
+        $deleteImage = $request->get('deleteImage') === '1';
 
         if ($imageFile) {
+            if (!$this->moderationService->isImageSafe($imageFile->getRealPath())) {
+                return $this->json(['message' => 'Image contains inappropriate content'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
             $userData->setFile($imageFile);
-        } else {
+        } elseif ($deleteImage) {
             $existingPath = $this->uploaderHelper->asset($userData, 'file');
             if ($existingPath !== null) {
                 try {
@@ -84,5 +91,7 @@ class UpdateUser extends AbstractController
         $userData->setFirstName($request->get('firstName'));
         $userData->setLastName($request->get('lastName'));
         $userData->setBio($request->get('bio'));
+        $geslachtValue = $request->get('geslacht');
+        $userData->setGeslacht($geslachtValue ? Geslacht::from($geslachtValue) : null);
     }
 }

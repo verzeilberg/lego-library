@@ -31,16 +31,15 @@ class FileManager
         try {
             if ($this->filesystem->exists($filePath)) {
                 $this->filesystem->remove($filePath);
-                // Reset entity fields
-                $setterFile = 'set' . ucfirst($fileField);
-                $setterPath = 'set' . ucfirst($fileField) . 'Path';
-                if (method_exists($entity, $setterFile)) $entity->$setterFile(null);
-                if (method_exists($entity, $setterPath)) $entity->$setterPath(null);
-
-                return true;
             }
 
-            throw new \RuntimeException("File not found at path: {$filePath}");
+            // Reset entity fields regardless of whether the file existed
+            $setterFile = 'set' . ucfirst($fileField);
+            $setterPath = 'set' . ucfirst($fileField) . 'Path';
+            if (method_exists($entity, $setterFile)) $entity->$setterFile(null);
+            if (method_exists($entity, $setterPath)) $entity->$setterPath(null);
+
+            return true;
         } catch (IOExceptionInterface $e) {
             throw new \RuntimeException("Unable to delete file: {$filePath}", 0, $e);
         }

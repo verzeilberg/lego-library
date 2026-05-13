@@ -4,11 +4,17 @@ namespace App\Controller\Lego;
 use App\Dto\Request\Lego\CreateSetRequest;
 use App\Service\Lego\SetService;
 use App\Service\Lego\RebrickableClient;
+use Doctrine\ORM\Exception\ORMException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class CreateSetController extends AbstractController
 {
@@ -19,6 +25,14 @@ class CreateSetController extends AbstractController
         $this->setService = $setService;
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws ORMException
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
     public function __invoke(Request $request): JsonResponse
     {
         return $this->setService->createSetByNumber($request->attributes->get('dto'));

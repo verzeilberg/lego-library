@@ -6,6 +6,7 @@ use App\Entity\Lego\Set;
 use App\Entity\Lego\SetList;
 use App\Entity\Lego\SetListSet;
 use App\Entity\Media\MediaObject;
+use App\Service\ImageModerationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,8 +17,9 @@ use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 class UploadSetImagesController extends AbstractController
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private UploaderHelper $uploaderHelper
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UploaderHelper         $uploaderHelper,
+        private readonly ImageModerationService $moderationService
     ) {}
 
     public function __invoke(
@@ -73,11 +75,19 @@ class UploadSetImagesController extends AbstractController
         $mediaObjects = [];
 
         foreach ($uploadedFiles as $file) {
+            // 🔒 Run moderation check BEFORE saving
+            $isSafe = $this->moderationService->isImageSafe($file->getPathname());
+            if (!$isSafe) {
+                return new JsonResponse(
+                    ['error' => 'One of the uploaded images contains explicit or unsafe content'],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
 
             $media = new MediaObject();
             $media->setFile($file);
 
-            // 🔥 attach to join entity
+            // attach to join entity
             $media->setSetListSet($link);
             $link->addMediaObject($media);
 
@@ -96,7 +106,7 @@ class UploadSetImagesController extends AbstractController
             $mediaObjects
         );
 
-        return new JsonResponse(['message' => 'Images uploaded'], Response::HTTP_CREATED);
+        return new JsonResponse($response, Response::HTTP_CREATED);
     }
 }
 
