@@ -11,7 +11,7 @@ final class Version20260513160000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Add all columns missing from production: lego_set, lego_set_list_set, user_data';
+        return 'Add all columns missing from production: lego_set, lego_set_list_set, user_data, lego_part_color';
     }
 
     public function up(Schema $schema): void
@@ -50,6 +50,13 @@ final class Version20260513160000 extends AbstractMigration
         if (!in_array('updated_at', $userDataColumns, true)) {
             $this->addSql('ALTER TABLE user_data ADD updated_at DATETIME DEFAULT NULL COMMENT \'(DC2Type:datetime_immutable)\'');
         }
+
+        // ── lego_part_color ───────────────────────────────────────────────────
+        $partColorColumns = array_keys($sm->listTableColumns('lego_part_color'));
+
+        if (!in_array('img_url', $partColorColumns, true)) {
+            $this->addSql('ALTER TABLE lego_part_color ADD img_url VARCHAR(255) DEFAULT NULL');
+        }
     }
 
     public function down(Schema $schema): void
@@ -57,5 +64,6 @@ final class Version20260513160000 extends AbstractMigration
         $this->addSql('ALTER TABLE lego_set DROP COLUMN base_number, DROP COLUMN total_parts, DROP COLUMN total_mini_fig_parts');
         $this->addSql('ALTER TABLE lego_set_list_set DROP COLUMN complete');
         $this->addSql('ALTER TABLE user_data DROP COLUMN user_name, DROP COLUMN bio, DROP COLUMN updated_at');
+        $this->addSql('ALTER TABLE lego_part_color DROP COLUMN img_url');
     }
 }
