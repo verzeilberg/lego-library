@@ -52,7 +52,12 @@ success "PHP $PHP_VERSION"
 [[ -f "$APP_DIR/.env.local" ]] || error ".env.local not found. Create it with production values before deploying."
 
 # Check required env vars are set in .env.local
-for var in APP_SECRET DATABASE_URL JWT_PASSPHRASE; do
+for var in \
+    APP_SECRET DATABASE_URL JWT_PASSPHRASE \
+    EMAIL_ENCRYPTION_KEY EMAIL_HMAC_KEY \
+    REBRICKABLE_API_KEY REBRICKABLE_API_URL \
+    SIGHTENGINE_USER SIGHTENGINE_SECRET \
+    APP_TITLE FRONTEND_URL MAILER_DSN; do
   grep -q "^${var}=" "$APP_DIR/.env.local" || \
     error "${var} is not set in .env.local."
 done
@@ -115,6 +120,8 @@ info "Creating upload directories..."
 mkdir -p \
   "$APP_DIR/public/media/lego/parts" \
   "$APP_DIR/public/media/profiel" \
+  "$APP_DIR/public/media/profile" \
+  "$APP_DIR/public/uploads/images" \
   "$APP_DIR/var/cache" \
   "$APP_DIR/var/log"
 success "Directories ready"
@@ -148,27 +155,41 @@ else
 fi
 
 # ─────────────────────────────────────────────
-# 9. File permissions
+# 9. Restart Messenger consumer
+# ─────────────────────────────────────────────
+info "Restarting Messenger consumer..."
+if systemctl is-active --quiet lego-messenger 2>/dev/null; then
+  systemctl restart lego-messenger && success "lego-messenger (systemd) restarted"
+elif command -v supervisorctl >/dev/null 2>&1 && supervisorctl status lego-messenger 2>/dev/null | grep -q RUNNING; then
+  supervisorctl restart lego-messenger && success "lego-messenger (supervisor) restarted"
+else
+  warn "Messenger consumer service not found — start manually: php bin/console messenger:consume async --time-limit=3600"
+fi
+
+# ─────────────────────────────────────────────
+# 10. File permissions
 # ─────────────────────────────────────────────
 info "Setting file permissions..."
 # Use setfacl if available (preferred), otherwise fall back to chmod
 if command -v setfacl >/dev/null 2>&1; then
   setfacl -R  -m u:"$WEB_USER":rwX -m u:"$(whoami)":rwX \
     "$APP_DIR/var" \
-    "$APP_DIR/public/media"
+    "$APP_DIR/public/media" \
+    "$APP_DIR/public/uploads"
   setfacl -dR -m u:"$WEB_USER":rwX -m u:"$(whoami)":rwX \
     "$APP_DIR/var" \
-    "$APP_DIR/public/media"
+    "$APP_DIR/public/media" \
+    "$APP_DIR/public/uploads"
   success "Permissions set via setfacl"
 else
-  chmod -R 775 "$APP_DIR/var" "$APP_DIR/public/media"
-  chown -R "$(whoami)":"$WEB_USER" "$APP_DIR/var" "$APP_DIR/public/media" 2>/dev/null || \
+  chmod -R 775 "$APP_DIR/var" "$APP_DIR/public/media" "$APP_DIR/public/uploads"
+  chown -R "$(whoami)":"$WEB_USER" "$APP_DIR/var" "$APP_DIR/public/media" "$APP_DIR/public/uploads" 2>/dev/null || \
     warn "Could not chown (run as root or add to $WEB_USER group)"
   success "Permissions set via chmod"
 fi
 
 # ─────────────────────────────────────────────
-# 10. Reload web server & PHP-FPM
+# 11. Reload web server & PHP-FPM
 # ─────────────────────────────────────────────
 info "Reloading services..."
 if systemctl is-active --quiet php8.2-fpm 2>/dev/null; then
