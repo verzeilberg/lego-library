@@ -40,3 +40,7 @@ services:
     App\Doctrine\TimestampableSubscriber:
       tags:
         - { name: doctrine.event_subscriber }
+    App\Service\ImageModerationService:
+        arguments:
+            $apiUser: '%env(SIGHTENGINE_USER)%'
+            $apiSecret: '%env(SIGHTENGINE_SECRET)%'

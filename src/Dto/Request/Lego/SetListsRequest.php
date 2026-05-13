@@ -27,6 +27,9 @@ final class SetListsRequest
     #[Groups(['setList:read'])]
     public ?string $filePath = null;
 
+    #[Groups(['setList:read'])]
+    public ?array $owner = null;
+
     public function __construct(
         string $id,
         string $title,
@@ -34,6 +37,7 @@ final class SetListsRequest
         bool $isPublic,
         bool $isSet,
         ?string $filePath,
+        ?array $owner = null,
     ) {
         $this->id = $id;
         $this->title = $title;
@@ -41,6 +45,7 @@ final class SetListsRequest
         $this->isPublic = $isPublic;
         $this->isSet = $isSet;
         $this->filePath = $filePath;
+        $this->owner = $owner;
     }
 
 }

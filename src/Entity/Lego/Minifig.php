@@ -40,7 +40,7 @@ class Minifig
     /**
      * @var Collection<int, SetMinifig>
      */
-    #[ORM\OneToMany(mappedBy: 'minifig', targetEntity: SetMinifig::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: SetMinifig::class, mappedBy: 'minifig', cascade: ['persist', 'remove'])]
     private Collection $setLinks;
 
     public function __construct()
@@ -54,7 +54,7 @@ class Minifig
     }
 
     /**
-     * @param int $Id
+     * @param int $id
      * @return Minifig
      */
     public function setId(int $id): Minifig

@@ -5,7 +5,11 @@ use App\Dto\Request\Lego\SetListsRequest;
 use App\Entity\Lego\SetList;
 use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetRepository;
+use App\Repository\FriendshipRepository;
+use App\Repository\UserDataRepository;
+use App\Service\EmailService;
 use App\Service\Lego\SetListService;
+use App\Service\PushNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
@@ -28,9 +32,13 @@ class SetListController extends AbstractController
      * @param SetListService $modalListService
      */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly SetListRepository      $setListRepository,
-        private readonly UploaderHelper         $uploaderHelper,
+        private readonly EntityManagerInterface  $entityManager,
+        private readonly SetListRepository       $setListRepository,
+        private readonly UploaderHelper          $uploaderHelper,
+        private readonly UserDataRepository      $userDataRepository,
+        private readonly FriendshipRepository    $friendshipRepository,
+        private readonly PushNotificationService $pushNotificationService,
+        private readonly EmailService            $emailService,
     ) {}
 
     /**
@@ -55,7 +63,8 @@ class SetListController extends AbstractController
         $imageFile = $request->files->get('file');
 
         //Create a new modellist
-        if (isset($id) && !empty($id)) {
+        $isNew = !isset($id) || empty($id);
+        if (!$isNew) {
             try {
                 $setList = $this->entityManager->find(SetList::class, $id);
             } catch (OptimisticLockException $e) {
@@ -69,7 +78,7 @@ class SetListController extends AbstractController
 
         $setList->setTitle($title);
         $setList->setDescription($description);
-        $setList->setPublic($publicPrivate);
+        $setList->setPublic(filter_var($publicPrivate, FILTER_VALIDATE_BOOLEAN));
         $setList->setFile($imageFile);
         $setList->setPublicationDate(new \DateTimeImmutable());
         if (isset($parentId) && !empty($parentId)) {
@@ -89,64 +98,27 @@ class SetListController extends AbstractController
         $this->entityManager->persist($userData);
         $this->entityManager->flush();
 
+        if ($isNew && filter_var($publicPrivate, FILTER_VALIDATE_BOOLEAN)) {
+            $senderName = $userData->getUserName()
+                ?? trim($userData->getFirstName() . ' ' . $userData->getLastName());
+            $friends = $this->friendshipRepository->getFriendUserDataList($userData);
+
+            $pushTokens = array_filter(array_map(fn($f) => $f->getNotificationPref('newBoardPush') ? $f->getPushToken() : null, $friends));
+            $this->pushNotificationService->send(array_values($pushTokens), $senderName . ' heeft een nieuw bord toegevoegd', $title ?? 'Nieuw bord');
+
+            foreach ($friends as $friend) {
+                if ($friend->getNotificationPref('newBoardEmail') && ($email = $friend->getOwner()?->getEmail())) {
+                    $this->emailService->send('social/new-board', $email, $senderName . ' heeft een nieuw bord toegevoegd', [
+                        'senderName'    => $senderName,
+                        'recipientName' => trim($friend->getFirstName() . ' ' . $friend->getLastName()),
+                        'boardTitle'    => $title ?? 'Nieuw bord',
+                    ]);
+                }
+            }
+        }
+
         $jsonData = $serializer->serialize($setList, 'json', ['groups' => ['modelList:read']]);
         return new JsonResponse($jsonData, Response::HTTP_OK, [], true);
-    }
-
-    /**
-     * Retrieves the model lists associated with the authenticated user.
-     *
-     * @param Request $request The HTTP request object.
-     * @param Security $security The security service to retrieve the current user.
-     *
-     * @return JsonResponse Returns a JSON response containing the user's model lists
-     *                      or an error message if the user is not found.
-     */
-    public function getSetListsByUser(Request $request, Security $security): JsonResponse
-    {
-        $user = $security->getUser();
-
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $userDataId = $user->getUserData()->getId();
-
-        // Fetch only top-level model lists (parentList IS NULL)
-        $setListsByUser = $this->setListRepository->findBy(
-            ['userData' => $userDataId, 'parentList' => null],
-            ['publicationDate' => 'DESC']
-        );
-
-        $setListsByUser = array_map(function ($set) {
-            $path = $this->uploaderHelper->asset($set, 'file');
-            return new SetListsRequest($set->getId(), $set->getTitle(), $set->getDescription(), $set->isPublic(), false, $path);
-        }, $setListsByUser);
-
-
-        return new JsonResponse($setListsByUser, Response::HTTP_OK);
-    }
-
-    public function getModelListById(Request $request, Security $security): JsonResponse
-    {
-
-        $user = $security->getUser();
-
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $id = $request->get('id');
-        $setList = $this->setListRepository->find($id);
-        if ($setList->getUserData()->getOwner() === $user) {
-            $path = $this->uploaderHelper->asset($setList, 'file');
-            $setListRequest = new SetListsRequest($setList->getId(), $setList->getTitle(), $setList->getDescription(), $path);
-
-            return new JsonResponse($setListRequest, Response::HTTP_OK);
-
-        } else {
-            return $this->json(['result' => 'Set list fetched unsuccessfully, user is not the owner of the model list'], Response::HTTP_UNAUTHORIZED);
-        }
     }
 
     /**

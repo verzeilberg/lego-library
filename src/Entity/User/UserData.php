@@ -23,6 +23,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use ApiPlatform\Metadata\ApiProperty;
+use App\Enum\Geslacht;
 
 #[Vich\Uploadable]
 #[ORM\Entity]
@@ -115,17 +116,21 @@ class UserData
     #[Groups(['userData:read', 'userData:update'])]
     private ?string $userName = null;
 
-    #[ORM\Column(type: Types::STRING, length: 255)]
+    #[ORM\Column(type: 'encrypted_string')]
     #[Groups(['userData:read', 'userData:update'])]
     private ?string $firstName = null;
 
-    #[ORM\Column(type: Types::STRING, length: 255)]
+    #[ORM\Column(type: 'encrypted_string')]
     #[Groups(['userData:read', 'userData:update'])]
     private ?string $lastName = null;
 
     #[ORM\Column(type: Types::STRING, length: 1024, nullable: true)]
     #[Groups(['userData:read', 'userData:update'])]
     private ?string $bio = null;
+
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true, enumType: Geslacht::class)]
+    #[Groups(['userData:read', 'userData:update'])]
+    private ?Geslacht $geslacht = null;
 
     #[ORM\OneToOne(targetEntity: User::class, inversedBy: 'userData', cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
@@ -144,6 +149,23 @@ class UserData
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
+
+    #[ORM\Column(type: 'encrypted_string', nullable: true)]
+    private ?string $pushToken = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $notificationPreferences = null;
+
+    private const PREF_DEFAULTS = [
+        'friendRequestPush'   => true,
+        'friendRequestEmail'  => true,
+        'friendAcceptedPush'  => true,
+        'friendAcceptedEmail' => true,
+        'newBoardPush'        => true,
+        'newBoardEmail'       => true,
+        'newSetPush'          => true,
+        'newSetEmail'         => true,
+    ];
 
     #[ORM\OneToMany(targetEntity: SetRating::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $setRatings;
@@ -211,6 +233,17 @@ class UserData
     public function setBio(?string $bio): self
     {
         $this->bio = $bio;
+        return $this;
+    }
+
+    public function getGeslacht(): ?Geslacht
+    {
+        return $this->geslacht;
+    }
+
+    public function setGeslacht(?Geslacht $geslacht): self
+    {
+        $this->geslacht = $geslacht;
         return $this;
     }
 
@@ -337,5 +370,32 @@ class UserData
         $this->file = null;
         $this->updatedAt = new \DateTimeImmutable();
         return $this;
+    }
+
+    public function getPushToken(): ?string
+    {
+        return $this->pushToken;
+    }
+
+    public function setPushToken(?string $pushToken): self
+    {
+        $this->pushToken = $pushToken;
+        return $this;
+    }
+
+    public function getNotificationPreferences(): array
+    {
+        return array_merge(self::PREF_DEFAULTS, $this->notificationPreferences ?? []);
+    }
+
+    public function setNotificationPreferences(array $prefs): self
+    {
+        $this->notificationPreferences = array_intersect_key($prefs, self::PREF_DEFAULTS);
+        return $this;
+    }
+
+    public function getNotificationPref(string $key): bool
+    {
+        return (bool)($this->getNotificationPreferences()[$key] ?? true);
     }
 }

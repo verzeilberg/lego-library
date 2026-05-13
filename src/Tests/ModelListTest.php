@@ -66,7 +66,7 @@ class ModelListTest extends BaseTest
         $this->assertResponseIsSuccessful();
         $this->assertArrayHasKey('title', $json);
         $this->assertArrayHasKey('description', $json);
-        $this->assertArrayHasKey('filePath', $json);
+        $this->assertArrayHasKey('contentUrl', $json);
     }
 
     public function testGetModelListsForUser(): void
@@ -98,7 +98,7 @@ class ModelListTest extends BaseTest
         $json = $response->toArray();
         $token = $json['token'];
 
-        $response = $client->request('GET', 'http://legolibrary-dev/api/set-lists', [
+        $response = $client->request('GET', 'http://legolibrary-dev/api/set-lists-for-user', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json'

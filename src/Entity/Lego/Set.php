@@ -10,6 +10,8 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\CreateSetController;
 use App\Controller\Lego\DeleteSetFromSetListController;
+use App\Controller\Lego\DeleteSetImageController;
+use App\Controller\Lego\GetPartsBySetIdController;
 use App\Controller\Lego\GetSetController;
 use App\Controller\Lego\UploadSetImagesController;
 use App\Dto\Request\Lego\CreateSetRequest;
@@ -44,14 +46,14 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
     operations: [
         new Get(
             uriTemplate: '/lego/set-lists/{listId}/sets/{number}',
-            controller: GetSetController::class . '::getSetById',
+            controller: GetSetController::class,
             shortName: 'Get lego set by list id and set id',
             read: true,
             deserialize: true
         ),
         new Get(
             uriTemplate: '/lego/sets/{number}/parts',
-            controller: GetSetController::class . '::getPartsBySetId',
+            controller: GetPartsBySetIdController::class,
             shortName: 'Get lego parts by set number',
             read: false
         ),
@@ -145,7 +147,22 @@ class Set
     #[ORM\Column(type: 'integer')]
     #[Assert\NotBlank]
     #[Groups(['lego_set:read','lego_set:write'])]
-    private int $numParts;
+    private int $numParts = 0;
+
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank]
+    #[Groups(['lego_set:read','lego_set:write'])]
+    private int $totalPartsQuantity = 0;
+
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank]
+    #[Groups(['lego_set:read','lego_set:write'])]
+    private int $totalParts = 0;
+
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank]
+    #[Groups(['lego_set:read','lego_set:write'])]
+    private int $totalMiniFigParts = 0;
 
     /**
      * Aggregate user rating (0–5).
@@ -230,33 +247,6 @@ class Set
     #[Groups(['lego_set:read','lego_set:write'])]
     #[ApiProperty(readableLink: false)]
     private ?Theme $theme = null;
-
-    /**
-     * Computed image URLs exposed through the API.
-     * Not persisted.
-     */
-    #[Groups(['lego_set:read'])]
-    private array $images = [];
-
-    /**
-     * Show parts or not
-     * @var bool
-     */
-    #[Groups(['lego_set:read'])]
-    private bool $showParts;
-
-    /**
-     * Show minifigs or not
-     * @var bool
-     */
-    #[Groups(['lego_set:read'])]
-    private bool $showMinifigs;
-
-    /**
-     * @var bool
-     */
-    #[Groups(['lego_set:read'])]
-    private int $personalRating;
 
     /**
      * Initializes Doctrine collections.
@@ -408,6 +398,60 @@ class Set
     {
         $this->numParts = $numParts;
 
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalPartsQuantity(): int
+    {
+        return $this->totalPartsQuantity;
+    }
+
+    /**
+     * @param int $totalPartsQuantity
+     * @return Set
+     */
+    public function setTotalPartsQuantity(int $totalPartsQuantity): Set
+    {
+        $this->totalPartsQuantity = $totalPartsQuantity;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalParts(): int
+    {
+        return $this->totalParts;
+    }
+
+    /**
+     * @param int $totalParts
+     * @return Set
+     */
+    public function setTotalParts(int $totalParts): Set
+    {
+        $this->totalParts = $totalParts;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalMiniFigParts(): int
+    {
+        return $this->totalMiniFigParts;
+    }
+
+    /**
+     * @param int $totalMiniFigParts
+     * @return Set
+     */
+    public function setTotalMiniFigParts(int $totalMiniFigParts): Set
+    {
+        $this->totalMiniFigParts = $totalMiniFigParts;
         return $this;
     }
 
@@ -621,82 +665,6 @@ class Set
             }
         }
 
-        return $this;
-    }
-
-    // ======================
-    // Images
-    // ======================
-
-    /**
-     * Returns computed image URLs.
-     */
-    public function getImages(): array
-    {
-        return $this->images;
-    }
-
-    /**
-     * Sets computed image URLs.
-     */
-    public function setImages(array $images): static
-    {
-        $this->images = $images;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isShowParts(): bool
-    {
-        return $this->showParts;
-    }
-
-    /**
-     * @param bool $showParts
-     * @return Set
-     */
-    public function setShowParts(bool $showParts): Set
-    {
-        $this->showParts = $showParts;
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isShowMinifigs(): bool
-    {
-        return $this->showMinifigs;
-    }
-
-    /**
-     * @param bool $showMinifigs
-     * @return Set
-     */
-    public function setShowMinifigs(bool $showMinifigs): Set
-    {
-        $this->showMinifigs = $showMinifigs;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPersonalRating(): int
-    {
-        return $this->personalRating;
-    }
-
-    /**
-     * @param int $personalRating
-     * @return Set
-     */
-    public function setPersonalRating(int $personalRating): Set
-    {
-        $this->personalRating = $personalRating;
         return $this;
     }
 

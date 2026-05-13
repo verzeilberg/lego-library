@@ -21,11 +21,6 @@ class Part
     #[Groups(['part:read', 'lego_set:read'])]
     private string $name;
 
-    // New property to store part image URL
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['part:read', 'lego_set:read'])]
-    private ?string $imgUrl = null;
-
     #[ORM\OneToMany(targetEntity: PartColor::class, mappedBy: 'part', cascade: ['persist'])]
     private Collection $colors;
 
@@ -37,9 +32,6 @@ class Part
 
     public function getName(): string { return $this->name; }
     public function setName(string $name): self { $this->name = $name; return $this; }
-
-    public function getImgUrl(): ?string { return $this->imgUrl; }
-    public function setImgUrl(?string $imgUrl): self { $this->imgUrl = $imgUrl; return $this; }
 
     public function getColors(): Collection { return $this->colors; }
     public function addColor(PartColor $color): self {

@@ -38,5 +38,20 @@ class UserDataRepository extends ServiceEntityRepository
         ;
     }
 
+    /**
+     * Returns all non-null push tokens stored for any user.
+     *
+     * @return string[]
+     */
+    public function getAllPushTokens(): array
+    {
+        $results = $this->createQueryBuilder('ud')
+            ->select('ud.pushToken')
+            ->where('ud.pushToken IS NOT NULL')
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_column($results, 'pushToken');
+    }
 
 }

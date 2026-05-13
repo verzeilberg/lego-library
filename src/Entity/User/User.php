@@ -26,7 +26,6 @@ use App\State\UserPasswordHasher;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -127,7 +126,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-#[UniqueEntity('email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     const ROLE_ADMIN = 'ROLE_ADMIN';
@@ -141,9 +139,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[Assert\NotBlank]
     #[Assert\Email]
-    #[ORM\Column(length: 180, unique: true)]
+    #[ORM\Column(type: 'encrypted_string')]
     #[Groups(['user:read', 'user:create', 'user:update'])]
     private ?string $email = null;
+
+    /** HMAC-SHA256 blind index used for DB lookups — never expose in API responses. */
+    #[ORM\Column(length: 64, unique: true, nullable: true)]
+    private ?string $emailHash = null;
 
     #[ORM\Column]
     private ?string $password = null;
@@ -184,6 +186,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getEmailHash(): ?string
+    {
+        return $this->emailHash;
+    }
+
+    public function setEmailHash(?string $emailHash): self
+    {
+        $this->emailHash = $emailHash;
 
         return $this;
     }

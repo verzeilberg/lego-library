@@ -2,6 +2,7 @@
 
 namespace App\Dto\Request\User;
 
+use App\Enum\Geslacht;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -18,6 +19,9 @@ class ProfileRequest
 
     #[Groups(['userData:read', 'userData:update'])]
     public ?string $bio = null;
+
+    #[Groups(['userData:read', 'userData:update'])]
+    public ?string $geslacht = null;
 
     #[Assert\Email]
     #[Assert\Length(max: 1024)]
@@ -77,6 +81,16 @@ class ProfileRequest
         $this->bio = $bio;
     }
 
+    public function getGeslacht(): ?string
+    {
+        return $this->geslacht;
+    }
+
+    public function setGeslacht(?string $geslacht): void
+    {
+        $this->geslacht = $geslacht;
+    }
+
     public function getProfilePicture(): ?string
     {
         return $this->profilePicture;
@@ -85,6 +99,18 @@ class ProfileRequest
     public function setProfilePicture(?string $profilePicture): void
     {
         $this->profilePicture = $profilePicture;
+    }
+
+    public ?array $notificationPreferences = null;
+
+    public function getNotificationPreferences(): ?array
+    {
+        return $this->notificationPreferences;
+    }
+
+    public function setNotificationPreferences(?array $notificationPreferences): void
+    {
+        $this->notificationPreferences = $notificationPreferences;
     }
 
 }

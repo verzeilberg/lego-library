@@ -3,6 +3,7 @@
 namespace App\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
+use App\DataFixtures\FullDataFixtures;
 use App\DataFixtures\UserFixtures;
 use App\Service\TokenService;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
@@ -48,19 +49,24 @@ class BaseTest extends ApiTestCase
     }
 
     /**
-     * Loads and executes database fixtures.
+     * Loads UserFixtures with the given options.
      *
-     * This method initializes user fixtures with the provided options, adds them to the loader,
-     * and purges the database before executing the loaded fixtures.
+     * Available options:
+     *   times      int      – number of users to create (default 10)
+     *   password   string   – plain password to hash (default: random)
+     *   active     bool     – whether users are activated (default false)
+     *   userData   bool     – create UserData for each user (default true)
+     *   userToken  bool     – create an activation token (default true)
+     *   tokenType  int      – UserToken::TYPE_* constant (default activation)
+     *   expiresAt  DateTime – token expiry (default +1 hour)
+     *   modelList  bool     – create set lists for each user (default false)
      *
-     * @param array $options An array of options to configure the fixtures.
      * @throws Exception
      */
     protected function loadFixtures(array $options = []): void
     {
-
         self::bootKernel();
-        $container = self::$kernel->getContainer();
+        $container = static::getContainer();
 
         $userFixtures = $container->get(UserFixtures::class);
         $userFixtures->setOptions($options);
@@ -70,7 +76,37 @@ class BaseTest extends ApiTestCase
         $purger = new ORMPurger();
         $executor = new ORMExecutor($this->entityManager, $purger);
 
-        $executor->purge(); // Maak eerst de database schoon
+        $executor->purge();
+        $executor->execute($loader->getFixtures());
+    }
+
+    /**
+     * Loads FullDataFixtures – a complete dataset covering all entity types:
+     * themes, sets, parts, colors, minifigs, users, set lists, set list sets,
+     * ratings, and defect-part tracking.
+     *
+     * Purges the database before loading.
+     *
+     * Credentials seeded:
+     *   john.doe@example.com  / Password1#  (active)
+     *   jane.smith@example.com / Password2#  (active)
+     *   inactive@example.com  / Password3#  (NOT active)
+     *
+     * @throws Exception
+     */
+    protected function loadFullFixtures(): void
+    {
+        self::bootKernel();
+        $container = static::getContainer();
+
+        $fullFixtures = $container->get(FullDataFixtures::class);
+        $loader = new Loader();
+        $loader->addFixture($fullFixtures);
+
+        $purger = new ORMPurger();
+        $executor = new ORMExecutor($this->entityManager, $purger);
+
+        $executor->purge();
         $executor->execute($loader->getFixtures());
     }
 

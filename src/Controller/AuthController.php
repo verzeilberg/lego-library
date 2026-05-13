@@ -46,7 +46,7 @@ class AuthController extends AbstractController
         $password = $postedData['password'];
 
         // Check if a user exists
-        $user = $this->userRepository->findOneBy(['email' => $email]);
+        $user = $this->userRepository->findByEmail($email);
 
         if (!$user || !$this->passwordEncoder->isPasswordValid($user, $password)) {
             return new JsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);

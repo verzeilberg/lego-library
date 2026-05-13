@@ -7,6 +7,7 @@ use App\Repository\Lego\SetListSetRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
@@ -35,10 +36,11 @@ class SetListSet
      * Primary identifier.
      */
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: "uuid", unique: true)]
+    #[ORM\GeneratedValue(strategy: "CUSTOM")]
+    #[ORM\CustomIdGenerator(class: 'Ramsey\Uuid\Doctrine\UuidGenerator')]
     #[Groups(['lego_set:read','lego_set:write'])]
-    private ?int $id = null;
+    private ?UuidInterface $id = null;
 
     /**
      * LEGO set referenced by this list entry.
@@ -92,6 +94,9 @@ class SetListSet
     #[ORM\Column(type: 'boolean')]
     private bool $complete = true;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $instructions = true;
+
     /**
      * Media objects attached to this set inside the list.
      *
@@ -112,18 +117,27 @@ class SetListSet
     )]
     private Collection $mediaObjects;
 
+    #[ORM\OneToMany(
+        targetEntity: UserSetPart::class,
+        mappedBy: 'setListSet',
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    private Collection $partStates;
+
     /**
      * Initializes Doctrine collections.
      */
     public function __construct()
     {
         $this->mediaObjects = new ArrayCollection();
+        $this->partStates = new ArrayCollection();
     }
 
     /**
      * Returns the primary identifier.
      */
-    public function getId(): ?int
+    public function getId(): ?UuidInterface
     {
         return $this->id;
     }
@@ -139,7 +153,7 @@ class SetListSet
     /**
      * Assigns the LEGO Set for this list entry.
      */
-    public function setSet(Set $set): static
+    public function setSet(?Set $set): static
     {
         $this->set = $set;
 
@@ -269,6 +283,50 @@ class SetListSet
         if ($this->mediaObjects->removeElement($media)) {
             if ($media->getSetListSet() === $this) {
                 $media->setSetListSet(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasInstructions(): bool
+    {
+        return $this->instructions;
+    }
+
+    /**
+     * @param bool $instructions
+     * @return SetListSet
+     */
+    public function setInstructions(bool $instructions): SetListSet
+    {
+        $this->instructions = $instructions;
+        return $this;
+    }
+
+    public function getPartStates(): Collection
+    {
+        return $this->partStates;
+    }
+
+    public function addPartState(UserSetPart $partState): static
+    {
+        if (!$this->partStates->contains($partState)) {
+            $this->partStates->add($partState);
+            $partState->setSetListSet($this);
+        }
+
+        return $this;
+    }
+
+    public function removePartState(UserSetPart $partState): static
+    {
+        if ($this->partStates->removeElement($partState)) {
+            if ($partState->getSetListSet() === $this) {
+                // Orphan removal will handle deletion
             }
         }
 

@@ -8,9 +8,14 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
+use App\Controller\Lego\DeleteSetImageController;
 use App\Controller\Lego\DeleteSetListController;
+use App\Controller\Lego\GetSetByIdController;
+use App\Controller\Lego\GetSetListChildrenAndSetsController;
+use App\Controller\Lego\GetSetListsByUserController;
+use App\Controller\Lego\GetSetListsPublic;
+use App\Controller\Lego\SearchSetListsPublicController;
 use App\Controller\Lego\SetListController;
-use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\User\UserData;
 use App\Repository\Lego\SetListRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -21,7 +26,6 @@ use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
-use App\Entity\Lego\Set as LegoModel;
 
 /** A model list. */
 #[Vich\Uploadable]
@@ -73,17 +77,30 @@ use App\Entity\Lego\Set as LegoModel;
             controller: DeleteSetListController::class,
             security: "is_granted('ROLE_ADMIN') or user == object.getUserData()->getOwner()"
         ),
+        new Delete(
+            uriTemplate: '/set-images/delete/{id}',
+            controller: DeleteSetImageController::class,
+            security: "is_granted('ROLE_ADMIN') or user == object.getUserData()->getOwner()"
+        ),
         new Get(
             uriTemplate: '/set-list/get/{id}',
-            controller: SetListController::class.'::getModelListById',
+            controller: GetSetByIdController::class,
         ),
         new GetCollection(
-            uriTemplate: '/set-lists',
-            controller: SetListController::class.'::getSetListsByUser',
+            uriTemplate: '/set-lists-public',
+            controller: GetSetListsPublic::class,
+        ),
+        new GetCollection(
+            uriTemplate: '/set-lists-public-search',
+            controller: SearchSetListsPublicController::class,
+        ),
+        new GetCollection(
+            uriTemplate: '/set-lists-for-user',
+            controller: GetSetListsByUserController::class,
         ),
         new GetCollection(
             uriTemplate: '/set-lists/{id}',
-            controller: SetListController::class.'::getSetListChildrenAndSets',
+            controller: GetSetListChildrenAndSetsController::class,
         )
     ],
     normalizationContext: ['groups' => ['modelList:read']],

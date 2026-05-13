@@ -53,6 +53,16 @@ readonly class SetListService
             );
         }
 
-        return $combined;
+        // Deduplicate by id in case the same entry appears more than once
+        $seen = [];
+        $result = [];
+        foreach ($combined as $item) {
+            if (!isset($seen[$item->id])) {
+                $seen[$item->id] = true;
+                $result[] = $item;
+            }
+        }
+
+        return $result;
     }
 }

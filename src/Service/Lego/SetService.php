@@ -6,10 +6,14 @@ use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\Lego\Set;
 use App\Entity\Lego\SetListSet;
 use App\Entity\Media\MediaObject;
+use App\Entity\User\UserData;
+use App\Repository\FriendshipRepository;
 use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetListSetRepository;
 use App\Repository\Lego\SetRepository;
 use App\Repository\Lego\ThemeRepository;
+use App\Service\EmailService;
+use App\Service\PushNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -33,6 +37,9 @@ class SetService
         private readonly RebrickableClient      $rebrickableClient,
         private readonly HttpClientInterface    $httpClient,
         private readonly EntityManagerInterface $entityManager,
+        private readonly PushNotificationService $pushNotificationService,
+        private readonly FriendshipRepository   $friendshipRepository,
+        private readonly EmailService           $emailService,
     )
     {}
 
@@ -64,9 +71,12 @@ class SetService
             $link->setShowImages($request->isAddLegoImages());
             $link->setShowMinifigs($request->isAddLegoMinifigs());
             $link->setShowParts($request->isAddLegoParts());
+            $link->setComplete(true);
 
             $this->entityManager->persist($link);
             $this->entityManager->flush();
+
+            $this->notifyFriendsOfNewSet($setList->getUserData(), $legoSet->getName(), $setList->getTitle(), $setList->isPublic());
 
             return new JsonResponse(
                 [
@@ -111,6 +121,7 @@ class SetService
         $link->setShowImages($request->isAddLegoImages());
         $link->setShowMinifigs($request->isAddLegoMinifigs());
         $link->setShowParts($request->isAddLegoParts());
+        $link->setComplete(true);
 
         $this->entityManager->persist($set);
         $this->entityManager->persist($link);
@@ -125,6 +136,8 @@ class SetService
 
         $this->entityManager->flush();
 
+        $this->notifyFriendsOfNewSet($setList->getUserData(), $set->getName(), $setList->getTitle(), $setList->isPublic());
+
         return new JsonResponse(
             [
                 'message' => 'Set created successfully',
@@ -132,6 +145,35 @@ class SetService
             ]
         );
 
+    }
+
+    private function notifyFriendsOfNewSet(?UserData $owner, string $setName, string $boardTitle, bool $isPublic): void
+    {
+        if (!$isPublic || !$owner) {
+            return;
+        }
+
+        $friends = $this->friendshipRepository->getFriendUserDataList($owner);
+        if (empty($friends)) {
+            return;
+        }
+
+        $senderName = $owner->getUserName()
+            ?? trim($owner->getFirstName() . ' ' . $owner->getLastName());
+
+        $pushTokens = array_filter(array_map(fn($f) => $f->getNotificationPref('newSetPush') ? $f->getPushToken() : null, $friends));
+        $this->pushNotificationService->send(array_values($pushTokens), $senderName . ' heeft een set toegevoegd', $setName . ' aan ' . $boardTitle);
+
+        foreach ($friends as $friend) {
+            if ($friend->getNotificationPref('newSetEmail') && ($email = $friend->getOwner()?->getEmail())) {
+                $this->emailService->send('social/new-set', $email, $senderName . ' heeft een set toegevoegd', [
+                    'senderName'    => $senderName,
+                    'recipientName' => trim($friend->getFirstName() . ' ' . $friend->getLastName()),
+                    'setName'       => $setName,
+                    'boardTitle'    => $boardTitle,
+                ]);
+            }
+        }
     }
 
     /**

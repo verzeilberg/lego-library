@@ -1,24 +1,30 @@
 <?php
-// tests/MediaObjectTest.php
 
 namespace App\Tests;
 
-use App\Entity\Media\MediaObject;
 use App\Entity\User\User;
+use App\Entity\User\UserData;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Tests profile image upload via POST /api/user-data/edit.
+ *
+ * The old /api/user/media_objects endpoint no longer exists; MediaObject is
+ * now used exclusively for set-list-set images.  Profile pictures are managed
+ * through the UpdateUser controller.
+ */
 class MediaObjectTest extends BaseTest
 {
-
-    public function testUploadImageToUserDateObject(): void
+    public function testUploadProfileImageToUserData(): void
     {
-
         $client = self::createClient();
 
         $options = [
             'times' => 1,
             'password' => 'Gravity35#',
             'active' => true,
+            'userData' => true,
         ];
         $this->loadFixtures($options);
 
@@ -26,8 +32,7 @@ class MediaObjectTest extends BaseTest
             ->getRepository(User::class)
             ->findAll();
 
-        // retrieve a token
-        $response = $client->request('POST', 'http://legolibrary-dev/api/login', [
+        $loginResponse = $client->request('POST', 'http://legolibrary-dev/api/login', [
             'headers' => ['Content-Type' => 'application/json'],
             'json' => [
                 'email' => $user[0]->getEmail(),
@@ -35,35 +40,33 @@ class MediaObjectTest extends BaseTest
             ],
         ]);
 
-        $json = $response->toArray();
-        $token = $json['token'];
+        $token = $loginResponse->toArray()['token'];
 
-        //Copy file to temp folder
-        $uploadedFilePath = sys_get_temp_dir() . '/test_image.jpg';
+        $uploadedFilePath = sys_get_temp_dir() . '/test_profile.jpg';
         copy(__DIR__ . '/../../fixtures/image.jpg', $uploadedFilePath);
-        // The file "image.jpg" is the folder fixtures which is in the project dir
-        $file = new UploadedFile($uploadedFilePath, 'image.jpg', null, null, false);
+        $file = new UploadedFile($uploadedFilePath, 'image.jpg', 'image/jpeg', null, true);
 
-        $response = $client->request('POST', 'http://legolibrary-dev/api/user/media_objects', [
+        $userData = $this->getEntityManager()
+            ->getRepository(UserData::class)
+            ->findAll();
+
+        $response = $client->request('POST', 'http://legolibrary-dev/api/user-data/edit', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
-                'Content-Type' => 'multipart/form-data'
             ],
             'extra' => [
-                // If you have additional fields in your MediaObject entity, use the parameters.
                 'parameters' => [
-                    // 'title' => 'title'
+                    'firstName' => $userData[0]->getFirstName(),
+                    'lastName'  => $userData[0]->getLastName(),
                 ],
                 'files' => [
                     'file' => $file,
                 ],
-            ]
+            ],
         ]);
 
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
         $json = $response->toArray();
-        $this->assertArrayHasKey('profilePicture', $json);
-        $this->assertResponseIsSuccessful();
-        $this->assertMatchesResourceItemJsonSchema(MediaObject::class);
-
+        $this->assertArrayHasKey('firstName', $json);
     }
 }

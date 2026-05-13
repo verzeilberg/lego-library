@@ -16,6 +16,7 @@ use App\Exception\NotFoundException;
 use App\Repository\UserDataRepository;
 use App\Repository\UserRepository;
 use App\Repository\UserTokenRepository;
+use App\Service\EmailEncryptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -37,12 +38,13 @@ class UserService
         private readonly UserPasswordHasherInterface  $userPasswordHasher,
         private readonly ValidatorInterface           $validator,
         private readonly UploaderHelper               $uploaderHelper,
+        private readonly EmailEncryptionService       $emailEncryptionService,
     )
     {}
 
     public function exists(string $email): bool
     {
-        return null !== $this->userRepository->findOneBy(['email' => $email]);
+        return null !== $this->userRepository->findByEmail($email);
     }
 
     /**
@@ -58,9 +60,11 @@ class UserService
             $profile->setFirstName($userData->getFirstName());
             $profile->setLastName($userData->getLastName());
             $profile->setBio($userData->getBio());
+            $profile->setGeslacht($userData->getGeslacht()?->value);
             //Get the full file/image path
             $path = $this->uploaderHelper->asset($userData, 'file');
             $profile->setProfilePicture($path);
+            $profile->setNotificationPreferences($userData->getNotificationPreferences());
 
             return $profile;
     }
@@ -86,6 +90,7 @@ class UserService
     {
         $user = new User();
         $user->setEmail($request->email);
+        $user->setEmailHash($this->emailEncryptionService->hash($request->email));
         $user->setPassword($this->userPasswordHasher->hashPassword($user, $request->plainPassword));
         $user->setRoles([User::ROLE_USER]);
         $user->setActive(false);
@@ -166,7 +171,7 @@ class UserService
             return new JsonResponse(['message' => (string)$errors], 400);
         }
 
-        $user = $this->userRepository->findOneBy(['email' => $request->email]);
+        $user = $this->userRepository->findByEmail($request->email);
         if (!$user) {
             return new JsonResponse(['message' => 'User not found'], 404);
         }

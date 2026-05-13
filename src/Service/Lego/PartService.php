@@ -2,7 +2,6 @@
 
 namespace App\Service\Lego;
 
-use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\Lego\Color;
 use App\Entity\Lego\Part;
 use App\Entity\Lego\PartColor;
@@ -11,13 +10,10 @@ use App\Entity\Lego\SetPart;
 use App\Repository\Lego\ColorRepository;
 use App\Repository\Lego\PartColorRepository;
 use App\Repository\Lego\PartRepository;
-use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetPartRepository;
-use App\Repository\Lego\ThemeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -34,6 +30,8 @@ readonly class PartService
         private SetPartRepository      $setPartRepository,
         private EntityManagerInterface $entityManager,
         private RebrickableClient      $rebrickableClient,
+        private HttpClientInterface    $httpClient,
+        #[Autowire('%kernel.project_dir%')] private string $projectDir,
     )
     {}
 
@@ -50,9 +48,15 @@ readonly class PartService
         // -------------------- 1. Prepare caches --------------------
         $partNumbers = [];
         $colorIds = [];
+        $totalPartsQuantity = 0;
+        $totalParts = 0;
         foreach ($parts as $row) {
             $partNumbers[$row['part']['part_num']] = true;
             $colorIds[$row['color']['id']] = true;
+            if( !$row['is_spare']) {
+                $totalPartsQuantity = (int) $totalPartsQuantity + (int) $row['quantity'];
+                $totalParts++;
+            }
         }
 
         $partNumbers = array_keys($partNumbers);
@@ -102,8 +106,7 @@ readonly class PartService
             } else {
                 $part = new Part();
                 $part->setPartNumber($partNumber)
-                    ->setName($row['part']['name'])
-                    ->setImgUrl($row['part']['part_img_url'] ?? null);
+                    ->setName($row['part']['name']);
                 $this->entityManager->persist($part);
                 $partCache[$partNumber] = $part;
             }
@@ -128,6 +131,11 @@ readonly class PartService
             } else {
                 $partColor = new PartColor();
                 $partColor->setPart($part)->setColor($color);
+                $remoteImgUrl = $row['part_img_url'] ?? $row['part']['part_img_url'] ?? null;
+                if ($remoteImgUrl) {
+                    $local = $this->downloadPartColorImage($remoteImgUrl, $partNumber, $colorId);
+                    $partColor->setImgUrl($local ?? $remoteImgUrl);
+                }
                 $this->entityManager->persist($partColor);
                 $partColorCache[$partColorKey] = $partColor;
             }
@@ -154,11 +162,40 @@ readonly class PartService
             }
         }
 
+        $set->setTotalPartsQuantity($totalPartsQuantity);
+        $set->setTotalParts($totalParts);
+
         // Flush any remaining entities
         $this->entityManager->flush();
 
         return $set;
     }
 
+    private function downloadPartColorImage(string $url, string $partNum, int $colorId): ?string
+    {
+        $partsDir = $this->projectDir . '/public/media/lego/parts';
+        if (!is_dir($partsDir)) {
+            mkdir($partsDir, 0755, true);
+        }
 
+        $ext      = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
+        $filename = 'part-' . $partNum . '-' . $colorId . '.' . $ext;
+        $filePath = $partsDir . '/' . $filename;
+
+        if (file_exists($filePath)) {
+            return 'parts/' . $filename;
+        }
+
+        try {
+            $response = $this->httpClient->request('GET', $url);
+            $content  = $response->getContent(false);
+            if (empty($content)) {
+                return null;
+            }
+            file_put_contents($filePath, $content);
+            return 'parts/' . $filename;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
 }
