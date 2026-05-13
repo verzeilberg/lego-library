@@ -16,7 +16,13 @@ final class Version20260423193301 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE user_data CHANGE first_name first_name LONGTEXT NOT NULL COMMENT \'(DC2Type:encrypted_string)\', CHANGE last_name last_name LONGTEXT NOT NULL COMMENT \'(DC2Type:encrypted_string)\', CHANGE push_token push_token LONGTEXT DEFAULT NULL COMMENT \'(DC2Type:encrypted_string)\'');
+        $columns = array_keys($this->connection->createSchemaManager()->listTableColumns('user_data'));
+        if (!in_array('push_token', $columns, true)) {
+            $this->addSql('ALTER TABLE user_data ADD push_token LONGTEXT DEFAULT NULL COMMENT \'(DC2Type:encrypted_string)\'');
+        } else {
+            $this->addSql('ALTER TABLE user_data CHANGE push_token push_token LONGTEXT DEFAULT NULL COMMENT \'(DC2Type:encrypted_string)\'');
+        }
+        $this->addSql('ALTER TABLE user_data CHANGE first_name first_name LONGTEXT NOT NULL COMMENT \'(DC2Type:encrypted_string)\', CHANGE last_name last_name LONGTEXT NOT NULL COMMENT \'(DC2Type:encrypted_string)\'');
     }
 
     public function postUp(Schema $schema): void
