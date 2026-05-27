@@ -1,1 +1,48 @@
-<h1>API Verzeilberg</h1>
+{% extends 'base.html.twig' %}
+
+{% block title %}Home — API Verzeilberg{% endblock %}
+
+{% block content %}
+    <div class="px-4 py-5 my-5 text-center">
+        <h1 class="display-4 fw-bold">API Verzeilberg</h1>
+        <p class="lead mb-4">Your personal LEGO library management API</p>
+        <p class="col-lg-8 mx-auto text-muted">
+            Organize, track, and manage your LEGO collection with ease.
+            Browse sets, minifigures, parts, and build custom boards.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/api/docs" class="btn btn-primary btn-lg px-4">API Documentation</a>
+            <a href="/api" class="btn btn-outline-secondary btn-lg px-4">Browse API</a>
+        </div>
+    </div>
+
+    <div class="row g-4 py-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3" style="font-size: 2.5rem;">🧱</div>
+                    <h5 class="card-title">Sets</h5>
+                    <p class="card-text text-muted">Browse and manage your LEGO sets with detailed metadata, parts, and minifigures.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3" style="font-size: 2.5rem;">📋</div>
+                    <h5 class="card-title">Boards</h5>
+                    <p class="card-text text-muted">Create custom boards to organize sets by theme, project, or collection.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3" style="font-size: 2.5rem;">🔧</div>
+                    <h5 class="card-title">Parts</h5>
+                    <p class="card-text text-muted">Track part conditions, identify defects, and keep your inventory accurate.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
