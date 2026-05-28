@@ -17,6 +17,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     shortName: 'Minifigs',
     description: 'LEGO minifigs',
+    operations: [],
 )]
 class Minifig
 {

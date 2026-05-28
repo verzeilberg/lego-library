@@ -2,19 +2,10 @@
 
 namespace App\Controller;
 
-use App\Dto\Request\User\ForgotPasswordRequest;
-use App\Entity\PasswordResetToken;
-use App\Repository\UserRepository;
 use App\Service\UserService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ForgotPasswordController extends AbstractController
 {
@@ -27,7 +18,6 @@ class ForgotPasswordController extends AbstractController
         $this->userService = $userService;
     }
 
-    #[Route('/api/forgot-password', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
     {
         return $this->userService->forgotPassword($request->attributes->get('dto'));

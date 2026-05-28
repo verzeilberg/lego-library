@@ -11,7 +11,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'lego_set_minifig')]
-#[ApiResource]
+#[ApiResource(operations: [])]
 class SetMinifig
 {
     #[ORM\Id]

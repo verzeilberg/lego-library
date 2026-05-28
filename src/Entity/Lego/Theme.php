@@ -14,7 +14,7 @@ use Ramsey\Uuid\UuidInterface;
         new ORM\Index(name: "idx_parent_theme", columns: ["parent_theme_id"])
     ]
 )]
-#[ApiResource]
+#[ApiResource(operations: [])]
 class Theme
 {
     #[ORM\Id]
