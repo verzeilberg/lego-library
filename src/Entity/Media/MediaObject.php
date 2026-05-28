@@ -17,7 +17,8 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 #[Vich\Uploadable]
 #[ApiResource(
     normalizationContext: ['groups' => ['media_object:read']],
-    denormalizationContext: ['groups' => ['media_object:write']]
+    denormalizationContext: ['groups' => ['media_object:write']],
+    operations: [],
 )]
 class MediaObject
 {

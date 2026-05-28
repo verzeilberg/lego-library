@@ -4,13 +4,11 @@ namespace App\Entity\Lego;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
-use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\DeleteSetImageController;
 use App\Controller\Lego\DeleteSetListController;
-use App\Controller\Lego\GetSetByIdController;
 use App\Controller\Lego\GetSetListChildrenAndSetsController;
 use App\Controller\Lego\GetSetListsByUserController;
 use App\Controller\Lego\GetSetListsPublic;
@@ -81,10 +79,6 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             uriTemplate: '/set-images/delete/{id}',
             controller: DeleteSetImageController::class,
             security: "is_granted('ROLE_ADMIN') or user == object.getUserData()->getOwner()"
-        ),
-        new Get(
-            uriTemplate: '/set-list/get/{id}',
-            controller: GetSetByIdController::class,
         ),
         new GetCollection(
             uriTemplate: '/set-lists-public',

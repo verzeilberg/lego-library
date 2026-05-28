@@ -2,15 +2,12 @@
 
 namespace App\Controller;
 
-use App\Repository\PasswordResetTokenRepository;
-use App\Repository\UserRepository;
 use App\Repository\UserTokenRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ResetPasswordController extends AbstractController
@@ -26,7 +23,6 @@ class ResetPasswordController extends AbstractController
         $this->passwordHasher = $passwordHasher;
     }
 
-    #[Route('/reset-password', methods: ['POST'])]
     public function __invoke(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
