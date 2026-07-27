@@ -11,6 +11,7 @@ use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\CreateSetController;
 use App\Controller\Lego\DeleteSetFromSetListController;
 use App\Controller\Lego\GetSetController;
+use App\Controller\Lego\MoveSetController;
 use App\Controller\Lego\UploadSetImagesController;
 use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\Media\MediaObject;
@@ -90,6 +91,29 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             controller: DeleteSetFromSetListController::class,
             shortName: 'Delete lego set from lego list',
             deserialize: true
+        ),
+        new Post(
+            uriTemplate: '/lego/set-list/{listId}/set/{setNumber}/move',
+            controller: MoveSetController::class,
+            shortName: 'Move lego set to another board',
+            openapi: new Model\Operation(
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'targetListId' => [
+                                        'type' => 'string'
+                                    ]
+                                ],
+                                'required' => ['targetListId'],
+                            ]
+                        ]
+                    ])
+                )
+            ),
+            deserialize: false,
         ),
     ],
     normalizationContext: ['groups' => ['lego_set:read', 'set_minifig:read']],

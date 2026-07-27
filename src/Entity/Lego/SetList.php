@@ -9,11 +9,16 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\DeleteSetImageController;
 use App\Controller\Lego\DeleteSetListController;
+use App\Controller\Lego\GetAllSetListsByUserController;
 use App\Controller\Lego\GetSetListChildrenAndSetsController;
 use App\Controller\Lego\GetSetListsByUserController;
 use App\Controller\Lego\GetSetListsPublic;
+use App\Controller\Lego\MoveSetListController;
+use App\Controller\Lego\SearchSetListsByUserController;
 use App\Controller\Lego\SearchSetListsPublicController;
 use App\Controller\Lego\SetListController;
+use App\Controller\Lego\ShareSetListController;
+use App\Controller\Lego\UnshareSetListController;
 use App\Entity\User\UserData;
 use App\Repository\Lego\SetListRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -70,6 +75,40 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             normalizationContext: ['groups' => ['modelList:read']],
             deserialize: false,
         ),
+        new Post(
+            uriTemplate: '/set-list/{id}/move',
+            controller: MoveSetListController::class,
+            openapi: new Model\Operation(
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'targetParentId' => [
+                                        'type' => 'string'
+                                    ]
+                                ],
+                                'required' => ['targetParentId'],
+                            ]
+                        ]
+                    ])
+                )
+            ),
+            deserialize: false,
+        ),
+        new Post(
+            uriTemplate: '/set-list/{id}/share/{userId}',
+            controller: ShareSetListController::class,
+            read: false,
+            deserialize: false,
+        ),
+        new Post(
+            uriTemplate: '/set-list/{id}/unshare/{userId}',
+            controller: UnshareSetListController::class,
+            read: false,
+            deserialize: false,
+        ),
         new Delete(
             uriTemplate: '/set-list/delete/{id}',
             controller: DeleteSetListController::class,
@@ -91,6 +130,14 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new GetCollection(
             uriTemplate: '/set-lists-for-user',
             controller: GetSetListsByUserController::class,
+        ),
+        new GetCollection(
+            uriTemplate: '/set-lists-user-search',
+            controller: SearchSetListsByUserController::class,
+        ),
+        new GetCollection(
+            uriTemplate: '/all-set-lists-for-user',
+            controller: GetAllSetListsByUserController::class,
         ),
         new GetCollection(
             uriTemplate: '/set-lists/{id}',
@@ -166,11 +213,16 @@ class SetList
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")] // Prevents null values, remove if not needed
     private ?UserData $userData = null;
 
+    #[ORM\ManyToMany(targetEntity: UserData::class)]
+    #[ORM\JoinTable(name: 'lego_set_list_shared')]
+    private Collection $sharedWith;
+
 
     public function __construct()
     {
         $this->childLists = new ArrayCollection();
         $this->setLinks = new ArrayCollection();
+        $this->sharedWith = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -303,6 +355,30 @@ class SetList
     {
         $this->userData = $userData;
         return $this;
+    }
+
+    public function getSharedWith(): Collection
+    {
+        return $this->sharedWith;
+    }
+
+    public function addSharedWith(UserData $userData): self
+    {
+        if (!$this->sharedWith->contains($userData)) {
+            $this->sharedWith[] = $userData;
+        }
+        return $this;
+    }
+
+    public function removeSharedWith(UserData $userData): self
+    {
+        $this->sharedWith->removeElement($userData);
+        return $this;
+    }
+
+    public function isSharedWith(UserData $userData): bool
+    {
+        return $this->sharedWith->contains($userData);
     }
 
 }

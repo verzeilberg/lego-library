@@ -32,6 +32,29 @@ class GetSetListByIdController extends AbstractController
             return new JsonResponse(['message' => 'Set list not found'], Response::HTTP_NOT_FOUND);
         }
 
+        $userData = $user->getUserData();
+        $isShared = $setList->getUserData() !== $userData;
+        $ownerData = $setList->getUserData();
+
+        // Include sharedWith list only for the owner (for ShareModal)
+        $sharedWith = null;
+        if ($ownerData === $userData) {
+            $sharedWith = $setList->getSharedWith()->map(fn($ud) => $ud->getId())->getValues();
+        }
+
+        $owner = null;
+        if ($ownerData !== null) {
+            $owner = [
+                'id'             => $ownerData->getId(),
+                'userName'       => $ownerData->getUserName(),
+                'firstName'      => $ownerData->getFirstName(),
+                'lastName'       => $ownerData->getLastName(),
+                'profilePicture' => $ownerData->getFilePath()
+                    ? $this->uploaderHelper->asset($ownerData, 'file')
+                    : null,
+            ];
+        }
+
         $path = $this->uploaderHelper->asset($setList, 'file');
 
         return new JsonResponse(new SetListsRequest(
@@ -41,6 +64,10 @@ class GetSetListByIdController extends AbstractController
             $setList->isPublic(),
             false,
             $path,
+            $owner,
+            $setList->getParentList()?->getId()?->toString(),
+            $isShared,
+            $sharedWith,
         ));
     }
 }

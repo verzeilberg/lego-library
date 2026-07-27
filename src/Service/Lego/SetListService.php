@@ -31,6 +31,8 @@ readonly class SetListService
                 $list->isPublic(),
                 false,
                 $this->uploaderHelper->asset($list, 'file'),
+                null,
+                $list->getParentList()?->getId()?->toString(),
             );
         }
 

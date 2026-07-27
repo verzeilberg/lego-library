@@ -50,6 +50,7 @@ readonly class SearchSetListService
                 false,
                 $filePath,
                 $owner,
+                $setList->getParentList()?->getId()?->toString(),
             );
         }, $setLists);
     }

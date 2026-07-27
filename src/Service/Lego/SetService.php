@@ -4,6 +4,7 @@ namespace App\Service\Lego;
 
 use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\Lego\Set;
+use App\Entity\Lego\SetList;
 use App\Entity\Lego\SetListSet;
 use App\Entity\Media\MediaObject;
 use App\Entity\User\UserData;
@@ -18,6 +19,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -52,12 +54,17 @@ class SetService
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface|ORMException
      */
-    public function createSetByNumber(CreateSetRequest $request): JsonResponse
+    public function createSetByNumber(CreateSetRequest $request, ?UserData $userData = null): JsonResponse
     {
         //Check if a set list exists
         $setList = $this->setListRepository->find($request->getId());
         if (null === $setList) {
             return new JsonResponse(['message' => 'Set list not found'], 404);
+        }
+
+        //Check if the user has access (owner or shared)
+        if ($userData && $setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
+            return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
         //Check if a set already exists
@@ -181,7 +188,7 @@ class SetService
      * @param string $setId
      * @return JsonResponse
      */
-    public function deleteSetFromSetList(string $bordId, string $setId): JsonResponse
+    public function deleteSetFromSetList(string $bordId, string $setId, ?UserData $userData = null): JsonResponse
     {
         $set = $this->setRepository->find($setId);
         if (!$set) {
@@ -191,6 +198,11 @@ class SetService
         $setList = $this->setListRepository->find($bordId);
         if (!$setList) {
             return new JsonResponse(['message' => 'Set list not found'], 404);
+        }
+
+        //Check if the user has access (owner or shared)
+        if ($userData && $setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
+            return new JsonResponse(['message' => 'Unauthorized'], 403);
         }
 
         // Find SetListSet by Set and SetList

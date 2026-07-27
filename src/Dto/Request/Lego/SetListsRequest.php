@@ -30,6 +30,15 @@ final class SetListsRequest
     #[Groups(['setList:read'])]
     public ?array $owner = null;
 
+    #[Groups(['setList:read'])]
+    public ?string $parentId = null;
+
+    #[Groups(['setList:read'])]
+    public bool $shared = false;
+
+    #[Groups(['setList:read'])]
+    public ?array $sharedWith = null;
+
     public function __construct(
         string $id,
         string $title,
@@ -38,6 +47,9 @@ final class SetListsRequest
         bool $isSet,
         ?string $filePath,
         ?array $owner = null,
+        ?string $parentId = null,
+        bool $shared = false,
+        ?array $sharedWith = null,
     ) {
         $this->id = $id;
         $this->title = $title;
@@ -46,6 +58,9 @@ final class SetListsRequest
         $this->isSet = $isSet;
         $this->filePath = $filePath;
         $this->owner = $owner;
+        $this->parentId = $parentId;
+        $this->shared = $shared;
+        $this->sharedWith = $sharedWith;
     }
 
 }
