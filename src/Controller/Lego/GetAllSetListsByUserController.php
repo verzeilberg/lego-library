@@ -7,52 +7,42 @@ use App\Repository\Lego\SetListRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 
-class GetSetListsByUserController extends AbstractController
+#[AsController]
+class GetAllSetListsByUserController extends AbstractController
 {
-
     public function __construct(
-        private readonly SetListRepository  $setListRepository,
-        private readonly UploaderHelper     $uploaderHelper,
-        private readonly Security           $security,
-    )
-    {
-    }
+        private readonly SetListRepository $setListRepository,
+        private readonly UploaderHelper    $uploaderHelper,
+        private readonly Security          $security,
+    ) {}
 
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(): JsonResponse
     {
         $user = $this->security->getUser();
-
         if (!$user) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $userDataId = $user->getUserData()->getId();
         $userData = $user->getUserData();
 
-        // Fetch own top-level model lists (parentList IS NULL)
         $ownedLists = $this->setListRepository->findBy(
-            ['userData' => $userDataId, 'parentList' => null],
+            ['userData' => $userData],
             ['publicationDate' => 'DESC']
         );
 
-        // Fetch top-level boards shared with this user
-        $sharedLists = $this->setListRepository->findBySharedWithUser($userData, true);
+        $sharedLists = $this->setListRepository->findBySharedWithUser($userData);
 
-        // Merge and deduplicate by id
         $allLists = array_merge($ownedLists, $sharedLists);
         $seen = [];
-        $setListsByUser = [];
+        $result = [];
         foreach ($allLists as $set) {
-            if (!isset($seen[$set->getId()->toString()])) {
-                $seen[$set->getId()->toString()] = true;
+            $key = $set->getId()->toString();
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
                 $path = $this->uploaderHelper->asset($set, 'file');
                 $isShared = $set->getUserData() !== $userData;
                 $owner = null;
@@ -68,7 +58,7 @@ class GetSetListsByUserController extends AbstractController
                             : null,
                     ];
                 }
-                $setListsByUser[] = new SetListsRequest(
+                $result[] = new SetListsRequest(
                     $set->getId(),
                     $set->getTitle(),
                     $set->getDescription(),
@@ -82,7 +72,6 @@ class GetSetListsByUserController extends AbstractController
             }
         }
 
-
-        return new JsonResponse($setListsByUser, Response::HTTP_OK);
+        return new JsonResponse($result, Response::HTTP_OK);
     }
 }

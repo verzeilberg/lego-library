@@ -72,8 +72,32 @@ class SetListController extends AbstractController
             } catch (ORMException $e) {
                 return $this->json(['result' => 'Set list edited unsuccessfully'], $e->getCode());
             }
+
+            if (!$setList) {
+                return $this->json(['result' => 'Set list not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            // Editing: only owner or shared user can edit (but not the top-level shared board itself)
+            $userData = $user->getUserData();
+            $isOwner = $setList->getUserData() === $userData;
+            $isSharedEdit = !$isOwner && $setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData);
+            if (!$isOwner && !$isSharedEdit) {
+                return $this->json(['result' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+            }
         } else {
             $setList = new SetList();
+
+            // Creating: check parent board access
+            if (isset($parentId) && !empty($parentId)) {
+                $parentBoard = $this->entityManager->find(SetList::class, $parentId);
+                if (!$parentBoard) {
+                    return $this->json(['result' => 'Parent board not found'], Response::HTTP_NOT_FOUND);
+                }
+                $userData = $user->getUserData();
+                if ($parentBoard->getUserData() !== $userData && !$parentBoard->isSharedWith($userData)) {
+                    return $this->json(['result' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+                }
+            }
         }
 
         $setList->setTitle($title);
@@ -94,7 +118,9 @@ class SetListController extends AbstractController
 
         //Set modellist to user data
         $userData = $user->getUserData();
-        $setList->setUserData($userData);
+        if ($isNew) {
+            $setList->setUserData($userData);
+        }
         $this->entityManager->persist($userData);
         $this->entityManager->flush();
 

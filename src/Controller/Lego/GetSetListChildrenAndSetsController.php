@@ -34,6 +34,12 @@ class GetSetListChildrenAndSetsController extends AbstractController
             return new JsonResponse(['message' => 'Set list not found'], Response::HTTP_NOT_FOUND);
         }
 
+        // Only allow access if the user is the owner or the board is shared with them or it's public
+        $userData = $user->getUserData();
+        if ($setList->getUserData() !== $userData && !$setList->isSharedWith($userData) && !$setList->isPublic()) {
+            return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
         $query = trim((string) $request->query->get('q', ''));
 
         if ($query !== '') {

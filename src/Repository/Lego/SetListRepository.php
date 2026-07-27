@@ -3,6 +3,7 @@
 namespace App\Repository\Lego;
 
 use App\Entity\Lego\SetList;
+use App\Entity\User\UserData;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -48,6 +49,46 @@ class SetListRepository extends ServiceEntityRepository
     }
 
     /**
+     * Search user's own boards by title, description, or contained set name/number.
+     *
+     * @return SetList[]
+     */
+    public function searchByUser(string $userDataId, string $query, int $limit, int $offset): array
+    {
+        $q = '%' . mb_strtolower($query) . '%';
+
+        $qb = $this->createQueryBuilder('sl')
+            ->leftJoin('sl.setLinks', 'sls')
+            ->leftJoin('sls.set', 's')
+            ->leftJoin('s.theme', 't')
+            ->where('sl.userData = :userDataId')
+            ->andWhere(
+                'LOWER(sl.title) LIKE :q
+                 OR LOWER(sl.description) LIKE :q
+                 OR LOWER(s.name) LIKE :q
+                 OR LOWER(s.baseNumber) LIKE :q
+                 OR LOWER(s.number) LIKE :q
+                 OR LOWER(t.name) LIKE :q'
+            )
+            ->setParameter('userDataId', $userDataId)
+            ->setParameter('q', $q);
+
+        if (is_numeric($query) && (int) $query > 0) {
+            $qb->orWhere('sl.userData = :userDataId2 AND s.year = :year')
+               ->setParameter('userDataId2', $userDataId)
+               ->setParameter('year', (int) $query);
+        }
+
+        return $qb
+            ->orderBy('sl.publicationDate', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->distinct()
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Find public boards excluding a specific user's boards.
      *
      * @return SetList[]
@@ -63,6 +104,26 @@ class SetListRepository extends ServiceEntityRepository
             ->setFirstResult($offset)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Find set lists shared with a given user.
+     *
+     * @return SetList[]
+     */
+    public function findBySharedWithUser(UserData $userData, bool $topLevelOnly = false): array
+    {
+        $qb = $this->createQueryBuilder('sl')
+            ->innerJoin('sl.sharedWith', 'sw')
+            ->where('sw = :userData')
+            ->setParameter('userData', $userData)
+            ->orderBy('sl.publicationDate', 'DESC');
+
+        if ($topLevelOnly) {
+            $qb->andWhere('sl.parentList IS NULL');
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     /**

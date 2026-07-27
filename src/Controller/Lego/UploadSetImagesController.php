@@ -9,6 +9,7 @@ use App\Entity\Media\MediaObject;
 use App\Service\ImageModerationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,8 +26,13 @@ class UploadSetImagesController extends AbstractController
     public function __invoke(
         string $number,
         string $listId,
-        Request $request
+        Request $request,
+        Security $security
     ): JsonResponse {
+        $user = $security->getUser();
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
 
         if (!$number || !$listId) {
             return new JsonResponse(
@@ -49,6 +55,12 @@ class UploadSetImagesController extends AbstractController
 
         if (!$setList) {
             return new JsonResponse(['error' => 'Set list not found'], 404);
+        }
+
+        // Check access (owner or shared)
+        $userData = $user->getUserData();
+        if ($setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
+            return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
         // Find the join entity

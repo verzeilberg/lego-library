@@ -62,7 +62,7 @@ class GetSetListsPublic extends AbstractController
                 ];
             }
 
-            return new SetListsRequest($set->getId(), $set->getTitle(), $set->getDescription(), $set->isPublic(), false, $path, $owner);
+            return new SetListsRequest($set->getId(), $set->getTitle(), $set->getDescription(), $set->isPublic(), false, $path, $owner, $set->getParentList()?->getId()?->toString());
         }, $setLists);
 
 
