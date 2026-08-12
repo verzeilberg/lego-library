@@ -101,7 +101,6 @@ const Welcome = () => (
           <div className="flex justify-center flex-wrap | lg:justify-start lg:grid lg:gap-5 lg:grid-cols-2">
             <Card image={apiPicture} title="API" url="/docs" />
             <Card image={adminPicture} title="Admin" url="/admin" />
-            <Card image={rocketPicture} title="Download App v2.0" url="/downloads/bricks-library-2.0.apk" />
             <Card
               image={mercurePicture}
               title="Mercure debugger"
