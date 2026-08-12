@@ -62,7 +62,10 @@ class GetSetController extends AbstractController
             return new JsonResponse(['message' => 'Set list not found'], 404);
         }
 
-        if (!$setList->isPublic() && $setList->getUserData() !== $user->getUserData()) {
+        $userData = $user->getUserData();
+        $isInSharedBoard = $setList->isSharedWith($userData) ||
+            ($setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData));
+        if (!$setList->isPublic() && $setList->getUserData() !== $userData && !$isInSharedBoard) {
             return new JsonResponse(['message' => 'Set list not found'], 404);
         }
 

@@ -36,11 +36,8 @@ class GetSetListByIdController extends AbstractController
         $isShared = $setList->getUserData() !== $userData;
         $ownerData = $setList->getUserData();
 
-        // Include sharedWith list only for the owner (for ShareModal)
-        $sharedWith = null;
-        if ($ownerData === $userData) {
-            $sharedWith = $setList->getSharedWith()->map(fn($ud) => $ud->getId())->getValues();
-        }
+        // Include sharedWith list so the ShareModal can manage sharing (owner or shared user)
+        $sharedWith = $setList->getSharedWith()->map(fn($ud) => $ud->getId())->getValues();
 
         $owner = null;
         if ($ownerData !== null) {

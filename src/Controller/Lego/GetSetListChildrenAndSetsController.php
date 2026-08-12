@@ -41,6 +41,9 @@ class GetSetListChildrenAndSetsController extends AbstractController
         }
 
         $query = trim((string) $request->query->get('q', ''));
+        $limit = max(1, (int) $request->query->get('limit', 10));
+        $page  = max(1, (int) $request->query->get('page', 1));
+        $offset = ($page - 1) * $limit;
 
         if ($query !== '') {
             $childLists = $this->setListRepository->findChildrenByQuery($id, $query);
@@ -52,6 +55,6 @@ class GetSetListChildrenAndSetsController extends AbstractController
 
         $result = $this->setListService->getCombinedListWithSets($childLists, $setLinks);
 
-        return $this->json($result, 200, [], ['groups' => ['setList:read']]);
+        return $this->json(array_slice($result, $offset, $limit), 200, [], ['groups' => ['setList:read']]);
     }
 }

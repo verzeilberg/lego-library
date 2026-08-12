@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head_metas %}
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% endblock %}
+
+    {% block title %}
+        <title>{% if title %}{{ title }}{% else %}API Docs{% endif %}</title>
+    {% endblock %}
+
+    {% block stylesheet %}
+        <link rel="stylesheet" href="{{ asset('bundles/apiplatform/fonts/open-sans/400.css', assetPackage) }}">
+        <link rel="stylesheet" href="{{ asset('bundles/apiplatform/fonts/open-sans/700.css', assetPackage) }}">
+        <link rel="stylesheet" href="{{ asset('bundles/apiplatform/swagger-ui/swagger-ui.css', assetPackage) }}">
+        <style>
+            body {
+                margin: 0;
+                background: #fafafa;
+            }
+            .swagger-ui .topbar {
+                display: none;
+            }
+            .swagger-ui .info {
+                margin: 20px 0;
+            }
+            .swagger-ui .info .title {
+                font-size: 1.5em;
+            }
+            .swagger-ui .scheme-container {
+                background: #fff;
+                box-shadow: 0 1px 3px rgba(0,0,0,.08);
+                padding: 10px 20px;
+                margin: 0 0 10px;
+            }
+            #formats {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border-top: 1px solid #e0e0e0;
+                padding: 8px 20px;
+                font-size: 13px;
+                color: #666;
+                z-index: 10;
+            }
+            #formats a {
+                margin: 0 6px;
+                color: #4990e2;
+                text-decoration: none;
+            }
+            #formats a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    {% endblock %}
+
+    {% set oauth_data = {'oauth': swagger_data.oauth|merge({'redirectUrl' : absolute_url(asset('bundles/apiplatform/swagger-ui/oauth2-redirect.html', assetPackage)) })} %}
+
+    {% block head_javascript %}
+        <script id="swagger-data" type="application/json">{{ swagger_data|merge(oauth_data)|json_encode(65)|raw }}</script>
+    {% endblock %}
+</head>
+
+<body>
+
+<div id="swagger-ui" class="api-platform"></div>
+
+<div class="swagger-ui" id="formats">
+    <div class="information-container wrapper">
+        <div class="info">
+            Formats:
+            {% for format in formats|keys %}
+                <a href="{{ path(originalRoute, originalRouteParams|merge({'_format': format})) }}">{{ format }}</a>
+            {% endfor %}
+
+            {% set active_ui = app.request.query.get('ui', 'swagger_ui') %}
+            {% if swaggerUiEnabled and active_ui != 'swagger_ui' %}<a href="{{ path(originalRoute, originalRouteParams) }}">Swagger UI</a>{% endif %}
+            {% if reDocEnabled and active_ui != 're_doc' %}<a href="{{ path(originalRoute, originalRouteParams|merge({'ui': 're_doc'})) }}">ReDoc</a>{% endif %}
+            {% if not graphQlEnabled or graphiQlEnabled %}<a {% if graphiQlEnabled %}href="{{ path('api_graphql_graphiql') }}"{% endif %} class="graphiql-link">GraphiQL</a>{% endif %}
+        </div>
+    </div>
+</div>
+
+{% block javascript %}
+    {% if (reDocEnabled and not swaggerUiEnabled) or (reDocEnabled and 're_doc' == active_ui) %}
+        <script src="{{ asset('bundles/apiplatform/redoc/redoc.standalone.js', assetPackage) }}"></script>
+        <script src="{{ asset('bundles/apiplatform/init-redoc-ui.js', assetPackage) }}"></script>
+    {% else %}
+        <script src="{{ asset('bundles/apiplatform/swagger-ui/swagger-ui-bundle.js', assetPackage) }}"></script>
+        <script src="{{ asset('bundles/apiplatform/swagger-ui/swagger-ui-standalone-preset.js', assetPackage) }}"></script>
+        <script src="{{ asset('bundles/apiplatform/init-swagger-ui.js', assetPackage) }}"></script>
+    {% endif %}
+    <script src="{{ asset('bundles/apiplatform/init-common-ui.js', assetPackage) }}" defer></script>
+{% endblock %}
+
+</body>
+</html>

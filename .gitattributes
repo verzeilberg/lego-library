@@ -13,8 +13,7 @@
 bin/console text eol=lf
 composer.lock text eol=lf merge=ours
 pnpm-lock.yaml text eol=lf merge=ours
-
 *.ico binary
 *.png binary
-
 update-deps.sh export-ignore
+pwa/public/downloads/bricks-library-2.0.apk filter=lfs diff=lfs merge=lfs -text

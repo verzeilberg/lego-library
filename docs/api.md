@@ -249,7 +249,9 @@ Create or update a set list (board). `multipart/form-data`.
 ---
 
 ### GET /api/set-lists-for-user
-Get top-level set lists for the authenticated user.
+Get top-level set lists for the authenticated user (paginated).
+
+**Query params:** `limit` (default 10), `page` (default 1)
 
 ---
 
@@ -273,9 +275,9 @@ Get a single set list by ID.
 ---
 
 ### GET /api/set-lists/{id}
-Get children lists and sets within a set list. Optional search query `q`.
+Get children lists and sets within a set list (paginated). Optional search query `q`.
 
-**Query params:** `q` (search sets/children by query)
+**Query params:** `q` (search sets/children by query), `limit` (default 10), `page` (default 1)
 
 ---
 

@@ -34,6 +34,10 @@ class GetSetListsByUserController extends AbstractController
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
+        $limit  = max(1, (int) $request->query->get('limit', 10));
+        $page   = max(1, (int) $request->query->get('page', 1));
+        $offset = ($page - 1) * $limit;
+
         $userDataId = $user->getUserData()->getId();
         $userData = $user->getUserData();
 
@@ -83,6 +87,8 @@ class GetSetListsByUserController extends AbstractController
         }
 
 
-        return new JsonResponse($setListsByUser, Response::HTTP_OK);
+        $paginated = array_slice($setListsByUser, $offset, $limit);
+
+        return new JsonResponse($paginated, Response::HTTP_OK);
     }
 }

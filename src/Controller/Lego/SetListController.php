@@ -77,11 +77,14 @@ class SetListController extends AbstractController
                 return $this->json(['result' => 'Set list not found'], Response::HTTP_NOT_FOUND);
             }
 
-            // Editing: only owner or shared user can edit (but not the top-level shared board itself)
+            // Editing: owner or shared user can edit (including the top-level shared board itself)
             $userData = $user->getUserData();
             $isOwner = $setList->getUserData() === $userData;
-            $isSharedEdit = !$isOwner && $setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData);
-            if (!$isOwner && !$isSharedEdit) {
+            $isInSharedBoard = !$isOwner && (
+                $setList->isSharedWith($userData) ||
+                ($setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData))
+            );
+            if (!$isOwner && !$isInSharedBoard) {
                 return $this->json(['result' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
             }
         } else {

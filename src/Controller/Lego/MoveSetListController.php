@@ -34,7 +34,10 @@ class MoveSetListController extends AbstractController
 
         $userData = $user->getUserData();
         $isOwner = $setList->getUserData() === $userData;
-        $isInSharedBoard = !$isOwner && $setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData);
+        $isInSharedBoard = !$isOwner && (
+            $setList->isSharedWith($userData) ||
+            ($setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData))
+        );
         if (!$isOwner && !$isInSharedBoard) {
             return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }

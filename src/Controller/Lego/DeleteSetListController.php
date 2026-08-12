@@ -51,7 +51,8 @@ class DeleteSetListController extends AbstractController
         }
 
         try {
-            if (!$setList->getUserData() || $setList->getUserData()->getOwner() === $user) {
+            $userData = $user->getUserData();
+            if (!$setList->getUserData() || $setList->getUserData()->getOwner() === $user || $setList->isSharedWith($userData)) {
                 $this->entityManager->remove($setList);
                 $this->entityManager->flush();
             } else {

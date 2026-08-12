@@ -77,6 +77,36 @@ class SetListCRUDTest extends BaseTest
         $this->assertIsArray($json);
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     */
+    public function testGetSetListsByUserSupportsPagination(): void
+    {
+        $options = [
+            'times' => 1,
+            'password' => 'Gravity35#',
+            'active' => true,
+            'userData' => true,
+            'modelList' => true,
+        ];
+        $this->loadFixtures($options);
+
+        [$client, $token] = $this->loginAndGetToken();
+
+        $response = $client->request('GET', 'http://legolibrary-dev/api/set-lists-for-user?page=1&limit=1', [
+            'auth_bearer' => $token,
+        ]);
+
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        $json = $response->toArray();
+        $this->assertIsArray($json);
+        $this->assertLessThanOrEqual(1, count($json));
+    }
+
     // -------------------------------------------------------------------------
     // GET /api/set-list/get/{id}
     // -------------------------------------------------------------------------
@@ -237,6 +267,44 @@ class SetListCRUDTest extends BaseTest
         ]);
 
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     */
+    public function testGetSetListChildrenSupportsPagination(): void
+    {
+        $options = [
+            'times' => 1,
+            'password' => 'Gravity35#',
+            'active' => true,
+            'userData' => true,
+            'modelList' => true,
+        ];
+        $this->loadFixtures($options);
+
+        [$client, $token] = $this->loginAndGetToken();
+
+        $setLists = $this->getEntityManager()
+            ->getRepository(SetList::class)
+            ->findAll();
+
+        $this->assertNotEmpty($setLists);
+
+        $setListId = (string) $setLists[0]->getId();
+
+        $response = $client->request('GET', 'http://legolibrary-dev/api/set-lists/' . $setListId . '?page=1&limit=1', [
+            'auth_bearer' => $token,
+        ]);
+
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        $json = $response->toArray();
+        $this->assertIsArray($json);
+        $this->assertLessThanOrEqual(1, count($json));
     }
 
     /**
