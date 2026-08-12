@@ -2,7 +2,18 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Lego\Color;
+use App\Entity\Lego\Minifig;
+use App\Entity\Lego\Part;
+use App\Entity\Lego\PartColor;
+use App\Entity\Lego\Set;
 use App\Entity\Lego\SetList;
+use App\Entity\Lego\SetListSet;
+use App\Entity\Lego\SetMinifig;
+use App\Entity\Lego\SetPart;
+use App\Entity\Lego\SetRating;
+use App\Entity\Lego\Theme;
+use App\Entity\Lego\UserSetPart;
 use App\Entity\User\User;
 use App\Entity\User\UserData;
 use App\Enum\Geslacht;
@@ -223,6 +234,318 @@ img.save($escaped, 'JPEG', quality=85)
             $list->setUserData($userData2);
             $manager->persist($list);
         }
+
+        $manager->flush();
+
+        // ------------------------------------------------------------------ //
+        // 3. LEGO THEMES, COLORS, PARTS, SETS, MINIFIGS, RATINGS, USER SET PARTS
+        // ------------------------------------------------------------------ //
+
+        // 3.1 THEMES
+        $themeStarWars = new Theme();
+        $themeStarWars->setThemeId(180);
+        $themeStarWars->setName('Star Wars');
+        $themeStarWars->setParentThemeId(null);
+
+        $themeCity = new Theme();
+        $themeCity->setThemeId(114);
+        $themeCity->setName('City');
+        $themeCity->setParentThemeId(null);
+
+        $themeTechnic = new Theme();
+        $themeTechnic->setThemeId(187);
+        $themeTechnic->setName('Technic');
+        $themeTechnic->setParentThemeId(null);
+
+        $manager->persist($themeStarWars);
+        $manager->persist($themeCity);
+        $manager->persist($themeTechnic);
+
+        // 3.2 COLORS
+        $colorBlack = new Color();
+        $colorBlack->setId(26);
+        $colorBlack->setName('Black');
+        $colorBlack->setRgb('05131D');
+        $colorBlack->setIsTrans(false);
+
+        $colorWhite = new Color();
+        $colorWhite->setId(1);
+        $colorWhite->setName('White');
+        $colorWhite->setRgb('FFFFFF');
+        $colorWhite->setIsTrans(false);
+
+        $colorRed = new Color();
+        $colorRed->setId(4);
+        $colorRed->setName('Red');
+        $colorRed->setRgb('C41E3A');
+        $colorRed->setIsTrans(false);
+
+        $colorBlue = new Color();
+        $colorBlue->setId(5);
+        $colorBlue->setName('Blue');
+        $colorBlue->setRgb('0055BF');
+        $colorBlue->setIsTrans(false);
+
+        $manager->persist($colorBlack);
+        $manager->persist($colorWhite);
+        $manager->persist($colorRed);
+        $manager->persist($colorBlue);
+
+        // 3.3 PARTS + PART COLORS
+        $partBrick2x4 = new Part();
+        $partBrick2x4->setPartNumber('3001');
+        $partBrick2x4->setName('Brick 2 x 4');
+
+        $partBrick2x2 = new Part();
+        $partBrick2x2->setPartNumber('3003');
+        $partBrick2x2->setName('Brick 2 x 2');
+
+        $partPlate1x2 = new Part();
+        $partPlate1x2->setPartNumber('3023');
+        $partPlate1x2->setName('Plate 1 x 2');
+
+        $manager->persist($partBrick2x4);
+        $manager->persist($partBrick2x2);
+        $manager->persist($partPlate1x2);
+        $manager->flush();
+
+        $partColorBlack2x4 = new PartColor();
+        $partColorBlack2x4->setPart($partBrick2x4);
+        $partColorBlack2x4->setColor($colorBlack);
+
+        $partColorWhite2x4 = new PartColor();
+        $partColorWhite2x4->setPart($partBrick2x4);
+        $partColorWhite2x4->setColor($colorWhite);
+
+        $partColorRed2x2 = new PartColor();
+        $partColorRed2x2->setPart($partBrick2x2);
+        $partColorRed2x2->setColor($colorRed);
+
+        $partColorBluePlate = new PartColor();
+        $partColorBluePlate->setPart($partPlate1x2);
+        $partColorBluePlate->setColor($colorBlue);
+
+        $manager->persist($partColorBlack2x4);
+        $manager->persist($partColorWhite2x4);
+        $manager->persist($partColorRed2x2);
+        $manager->persist($partColorBluePlate);
+
+        // 3.4 SETS
+        $setFalcon = new Set();
+        $setFalcon->setNumber('75192-1');
+        $setFalcon->setBaseNumber('75192');
+        $setFalcon->setName('Millennium Falcon');
+        $setFalcon->setYear(2017);
+        $setFalcon->setNumParts(7541);
+        $setFalcon->setTotalParts(7541);
+        $setFalcon->setTotalPartsQuantity(7541);
+        $setFalcon->setTotalMiniFigParts(0);
+        $setFalcon->setRating(5.0);
+        $setFalcon->setTheme($themeStarWars);
+
+        $setFireStation = new Set();
+        $setFireStation->setNumber('60316-1');
+        $setFireStation->setBaseNumber('60316');
+        $setFireStation->setName('Fire Station');
+        $setFireStation->setYear(2022);
+        $setFireStation->setNumParts(509);
+        $setFireStation->setTotalParts(509);
+        $setFireStation->setTotalPartsQuantity(509);
+        $setFireStation->setTotalMiniFigParts(0);
+        $setFireStation->setRating(4.5);
+        $setFireStation->setTheme($themeCity);
+
+        $setBugatti = new Set();
+        $setBugatti->setNumber('42143-1');
+        $setBugatti->setBaseNumber('42143');
+        $setBugatti->setName('Ferrari Daytona SP3');
+        $setBugatti->setYear(2022);
+        $setBugatti->setNumParts(3778);
+        $setBugatti->setTotalParts(3778);
+        $setBugatti->setTotalPartsQuantity(3778);
+        $setBugatti->setTotalMiniFigParts(0);
+        $setBugatti->setRating(4.8);
+        $setBugatti->setTheme($themeTechnic);
+
+        $manager->persist($setFalcon);
+        $manager->persist($setFireStation);
+        $manager->persist($setBugatti);
+        $manager->flush();
+
+        // 3.5 SET PARTS (5 parts across sets)
+        $setPart1 = new SetPart();
+        $setPart1->setModel($setFalcon);
+        $setPart1->setPartColor($partColorBlack2x4);
+        $setPart1->setQuantity(100);
+
+        $setPart2 = new SetPart();
+        $setPart2->setModel($setFalcon);
+        $setPart2->setPartColor($partColorWhite2x4);
+        $setPart2->setQuantity(50);
+
+        $setPart3 = new SetPart();
+        $setPart3->setModel($setFireStation);
+        $setPart3->setPartColor($partColorRed2x2);
+        $setPart3->setQuantity(200);
+
+        $setPart4 = new SetPart();
+        $setPart4->setModel($setFireStation);
+        $setPart4->setPartColor($partColorBluePlate);
+        $setPart4->setQuantity(100);
+
+        $setPart5 = new SetPart();
+        $setPart5->setModel($setBugatti);
+        $setPart5->setPartColor($partColorBlack2x4);
+        $setPart5->setQuantity(300);
+
+        $manager->persist($setPart1);
+        $manager->persist($setPart2);
+        $manager->persist($setPart3);
+        $manager->persist($setPart4);
+        $manager->persist($setPart5);
+
+        // 3.6 MINIFIGS
+        $minifigHanSolo = new Minifig();
+        $minifigHanSolo->setId(1);
+        $minifigHanSolo->setSetNumId('75192-1-han');
+        $minifigHanSolo->setName('Han Solo');
+
+        $minifigChewbacca = new Minifig();
+        $minifigChewbacca->setId(2);
+        $minifigChewbacca->setSetNumId('75192-1-chewie');
+        $minifigChewbacca->setName('Chewbacca');
+
+        $minifigPoliceOfficer = new Minifig();
+        $minifigPoliceOfficer->setId(3);
+        $minifigPoliceOfficer->setSetNumId('60316-1-police');
+        $minifigPoliceOfficer->setName('Police Officer');
+
+        $manager->persist($minifigHanSolo);
+        $manager->persist($minifigChewbacca);
+        $manager->persist($minifigPoliceOfficer);
+        $manager->flush();
+
+        // 3.7 SET MINIFIGS (linking minifigs to sets)
+        $setMinifig1 = new SetMinifig();
+        $setMinifig1->setSet($setFalcon);
+        $setMinifig1->setMinifig($minifigHanSolo);
+        $setMinifig1->setQuantity(1);
+
+        $setMinifig2 = new SetMinifig();
+        $setMinifig2->setSet($setFalcon);
+        $setMinifig2->setMinifig($minifigChewbacca);
+        $setMinifig2->setQuantity(1);
+
+        $setMinifig3 = new SetMinifig();
+        $setMinifig3->setSet($setFireStation);
+        $setMinifig3->setMinifig($minifigPoliceOfficer);
+        $setMinifig3->setQuantity(1);
+
+        $manager->persist($setMinifig1);
+        $manager->persist($setMinifig2);
+        $manager->persist($setMinifig3);
+        $manager->flush();
+
+        // 3.8 SET LIST SETS (link sets to set lists)
+        $sls1 = new SetListSet();
+        $sls1->setSet($setFalcon);
+        $sls1->setSetList($publicList1);
+        $sls1->setShowImages(true);
+        $sls1->setShowParts(true);
+        $sls1->setShowMinifigs(true);
+        $sls1->setComplete(true);
+        $sls1->setInstructions(true);
+
+        $sls2 = new SetListSet();
+        $sls2->setSet($setFireStation);
+        $sls2->setSetList($publicList2);
+        $sls2->setShowImages(true);
+        $sls2->setShowParts(true);
+        $sls2->setShowMinifigs(true);
+        $sls2->setComplete(true);
+        $sls2->setInstructions(true);
+
+        $sls3 = new SetListSet();
+        $sls3->setSet($setBugatti);
+        $sls3->setSetList($childList1);
+        $sls3->setShowImages(true);
+        $sls3->setShowParts(true);
+        $sls3->setShowMinifigs(true);
+        $sls3->setComplete(true);
+        $sls3->setInstructions(true);
+
+        $sls4 = new SetListSet();
+        $sls4->setSet($setFalcon);
+        $sls4->setSetList($childList1);
+        $sls4->setShowImages(true);
+        $sls4->setShowParts(true);
+        $sls4->setShowMinifigs(true);
+        $sls4->setComplete(true);
+        $sls4->setInstructions(true);
+
+        $manager->persist($sls1);
+        $manager->persist($sls2);
+        $manager->persist($sls3);
+        $manager->persist($sls4);
+        $manager->flush();
+
+        // 3.9 SET RATINGS
+        $rating1 = new SetRating();
+        $rating1->setUser($userData1);
+        $rating1->setSet($setFalcon);
+        $rating1->setValue(5);
+
+        $rating2 = new SetRating();
+        $rating2->setUser($userData1);
+        $rating2->setSet($setFireStation);
+        $rating2->setValue(4);
+
+        $rating3 = new SetRating();
+        $rating3->setUser($userData2);
+        $rating3->setSet($setBugatti);
+        $rating3->setValue(5);
+
+        $rating4 = new SetRating();
+        $rating4->setUser($userData2);
+        $rating4->setSet($setFalcon);
+        $rating4->setValue(4);
+
+        $rating5 = new SetRating();
+        $rating5->setUser($userData1);
+        $rating5->setSet($setFireStation);
+        $rating5->setValue(3);
+
+        $manager->persist($rating1);
+        $manager->persist($rating2);
+        $manager->persist($rating3);
+        $manager->persist($rating4);
+        $manager->persist($rating5);
+
+        // 3.10 USER SET PARTS (defect tracking)
+        $usp1 = new UserSetPart();
+        $usp1->setSetListSet($sls1);
+        $usp1->setSetPart($setPart1);
+        $usp1->setMissingQuantity(0);
+        $usp1->setDamagedQuantity(1);
+        $usp1->setDiscolouredQuantity(0);
+
+        $usp2 = new UserSetPart();
+        $usp2->setSetListSet($sls2);
+        $usp2->setSetPart($setPart3);
+        $usp2->setMissingQuantity(2);
+        $usp2->setDamagedQuantity(0);
+        $usp2->setDiscolouredQuantity(1);
+
+        $usp3 = new UserSetPart();
+        $usp3->setSetListSet($sls3);
+        $usp3->setSetPart($setPart5);
+        $usp3->setMissingQuantity(0);
+        $usp3->setDamagedQuantity(0);
+        $usp3->setDiscolouredQuantity(2);
+
+        $manager->persist($usp1);
+        $manager->persist($usp2);
+        $manager->persist($usp3);
 
         $manager->flush();
     }

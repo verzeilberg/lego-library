@@ -114,7 +114,7 @@ class FullDataFixturesTest extends BaseTest
     public function testSetRatingsAreCreated(): void
     {
         $ratings = $this->getEntityManager()->getRepository(SetRating::class)->findAll();
-        $this->assertCount(4, $ratings);
+        $this->assertCount(5, $ratings);
 
         $values = array_map(fn(SetRating $r) => $r->getValue(), $ratings);
         $this->assertContains(5, $values);
