@@ -1,5 +1,4 @@
 * text=auto eol=lf
-
 *.conf text eol=lf
 *.html text eol=lf
 *.ini text eol=lf
@@ -16,4 +15,5 @@ pnpm-lock.yaml text eol=lf merge=ours
 *.ico binary
 *.png binary
 update-deps.sh export-ignore
+*.apk filter=lfs diff=lfs merge=lfs -text
 pwa/public/downloads/bricks-library-2.0.apk filter=lfs diff=lfs merge=lfs -text
