@@ -5,6 +5,7 @@ namespace App\Tests;
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use App\DataFixtures\FullDataFixtures;
 use App\DataFixtures\UserFixtures;
+use App\Doctrine\Subscriber\DoctrineTypeConfigurator;
 use App\Service\TokenService;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Loader;
@@ -34,6 +35,8 @@ class BaseTest extends ApiTestCase
         $this->entityManager = self::getContainer()->get('doctrine')->getManager();
         $this->jwtTokenManager = self::getContainer()->get(JWTTokenManagerInterface::class);
         $this->tokenService = self::getContainer()->get(TokenService::class);
+
+        self::getContainer()->get(DoctrineTypeConfigurator::class)->configure();
 
         $purger = new ORMPurger();
         $executor = new ORMExecutor($this->entityManager, $purger);

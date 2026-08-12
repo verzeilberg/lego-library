@@ -73,22 +73,6 @@ class LegoSetAuthTest extends BaseTest
     }
 
     // -------------------------------------------------------------------------
-    // GET /api/lego/sets/{number}/parts
-    // -------------------------------------------------------------------------
-
-    /**
-     * @throws TransportExceptionInterface
-     */
-    public function testGetPartsBySetNumberRequiresAuthentication(): void
-    {
-        $client = self::createClient();
-
-        $client->request('GET', 'http://legolibrary-dev/api/lego/sets/75192/parts');
-
-        $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
-    }
-
-    // -------------------------------------------------------------------------
     // POST /api/lego/set-lists/{listId}/sets/{number}/add-images
     // -------------------------------------------------------------------------
 

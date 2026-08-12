@@ -108,7 +108,7 @@ class SetListCRUDTest extends BaseTest
     }
 
     // -------------------------------------------------------------------------
-    // GET /api/set-list/get/{id}
+    // GET /api/set-list/{id}
     // -------------------------------------------------------------------------
 
     /**
@@ -118,7 +118,7 @@ class SetListCRUDTest extends BaseTest
     {
         $client = self::createClient();
 
-        $client->request('GET', 'http://legolibrary-dev/api/set-list/get/some-id');
+        $client->request('GET', 'http://legolibrary-dev/api/set-list/some-id');
 
         $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
@@ -151,7 +151,7 @@ class SetListCRUDTest extends BaseTest
 
         $setListId = (string) $setList[0]->getId();
 
-        $response = $client->request('GET', 'http://legolibrary-dev/api/set-list/get/' . $setListId, [
+        $response = $client->request('GET', 'http://legolibrary-dev/api/set-list/' . $setListId, [
             'auth_bearer' => $token,
         ]);
 

@@ -1,4 +1,4 @@
-# Lego Library API Documentation
+# Bricks Library API Documentation
 
 Base URL: `/api`
 

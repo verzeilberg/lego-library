@@ -1,5 +1,5 @@
 api_platform:
-    title: "Lego library api"
+    title: "Bricks library"
     description: "This is a library to store your personal lego models"
     version: 1.0.0
     formats:
