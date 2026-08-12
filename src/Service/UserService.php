@@ -88,6 +88,10 @@ class UserService
      */
     public function register(RegisterUserRequest $request): JsonResponse
     {
+        if ($this->exists($request->email)) {
+            return new JsonResponse(['message' => 'User with this email already exists'], 422);
+        }
+
         $user = new User();
         $user->setEmail($request->email);
         $user->setEmailHash($this->emailEncryptionService->hash($request->email));

@@ -119,6 +119,7 @@ class EditBoardTest extends BaseTest
 
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
         $json = $response->toArray();
+        fwrite(STDERR, "\nResponse: " . json_encode($json) . "\n");
         $this->assertArrayHasKey('title', $json);
         $this->assertEquals('Board With New Image', $json['title']);
         $this->assertArrayHasKey('contentUrl', $json);

@@ -105,7 +105,7 @@ success "APP_ENV=prod, APP_DEBUG=0"
 # 4. Composer install (no dev dependencies)
 # ─────────────────────────────────────────────
 info "Installing Composer dependencies..."
-COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod "$COMPOSER_BIN" install \
+COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod "$COMPOSER_BIN" install --ignore-platform-reqs \
   --prefer-dist \
   --no-dev \
   --no-interaction \

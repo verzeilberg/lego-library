@@ -6,12 +6,14 @@
     "require": {
         "php": ">=8.2",
         "ext-ctype": "*",
+        "ext-curl": "*",
         "ext-iconv": "*",
         "ext-xmlwriter": "*",
         "api-platform/core": "^4.0",
         "doctrine/dbal": "^3",
         "doctrine/doctrine-bundle": "^2.11",
         "doctrine/doctrine-migrations-bundle": "^3.3",
+        "doctrine/instantiator": "^2.1",
         "doctrine/orm": "^3.1",
         "lexik/jwt-authentication-bundle": "^3.1",
         "nelmio/cors-bundle": "^2.4",
@@ -41,6 +43,7 @@
         "symfony/security-bundle": "6.4.*",
         "symfony/serializer": "6.4.*",
         "symfony/twig-bundle": "6.4.*",
+        "symfony/type-info": "^8.1",
         "symfony/uid": "6.4.*",
         "symfony/validator": "6.4.*",
         "symfony/webpack-encore-bundle": "^2.1",
@@ -50,8 +53,7 @@
         "twig/twig": "^2.12|^3.0",
         "vich/uploader-bundle": "^2.4",
         "webonyx/graphql-php": "^15.11",
-        "wildbit/postmark-php": "^7.0",
-        "ext-curl": "*"
+        "wildbit/postmark-php": "^7.0"
     },
     "config": {
         "allow-plugins": {

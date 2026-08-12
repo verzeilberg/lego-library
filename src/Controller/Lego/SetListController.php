@@ -127,6 +127,8 @@ class SetListController extends AbstractController
         $this->entityManager->persist($userData);
         $this->entityManager->flush();
 
+        $setList->setContentUrl($this->uploaderHelper->asset($setList, 'file'));
+
         if ($isNew && filter_var($publicPrivate, FILTER_VALIDATE_BOOLEAN)) {
             $senderName = $userData->getUserName()
                 ?? trim($userData->getFirstName() . ' ' . $userData->getLastName());

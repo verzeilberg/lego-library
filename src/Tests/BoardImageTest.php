@@ -7,6 +7,7 @@ use App\Entity\Lego\SetList;
 use App\Entity\Lego\SetListSet;
 use App\Entity\Lego\Theme;
 use App\Entity\User\User;
+use App\Entity\User\UserData;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -29,6 +30,7 @@ class BoardImageTest extends BaseTest
     private function createSetAndLinkToList(SetList $setList): Set
     {
         $em = $this->getEntityManager();
+        $setList = $em->find(SetList::class, $setList->getId());
 
         $theme = (new Theme())->setThemeId(1)->setName('Pirates');
         $em->persist($theme);
@@ -132,7 +134,8 @@ class BoardImageTest extends BaseTest
 
         // Create a set list manually (no set linked to it)
         $em = $this->getEntityManager();
-        $userData = $this->getEntityManager()->getRepository(User::class)->findAll()[0]->getUserData();
+        $user = $em->find(User::class, $em->getRepository(User::class)->findAll()[0]->getId());
+        $userData = $em->find(UserData::class, $user->getUserData()->getId());
 
         $setList = new SetList();
         $setList->setTitle('Empty Board');

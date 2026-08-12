@@ -61,7 +61,7 @@ class SetListSet
      *
      * Owning side of the relation.
      */
-    #[ORM\ManyToOne(targetEntity: SetList::class, inversedBy: 'setLinks')]
+    #[ORM\ManyToOne(targetEntity: SetList::class, inversedBy: 'setLinks', cascade: ['persist'])]
     #[ORM\JoinColumn(
         name: 'set_list_id',
         referencedColumnName: 'id',
