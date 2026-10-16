@@ -26,7 +26,7 @@ class UserToken
     #[ORM\Column(type: 'datetime')]
     private \DateTime $expiresAt;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'tokens')]
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private User $user;
 

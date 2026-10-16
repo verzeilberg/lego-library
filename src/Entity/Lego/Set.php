@@ -186,7 +186,7 @@ class Set
     #[ORM\Column(type: 'decimal', precision: 2, scale: 1)]
     #[Assert\Range(min: 0, max: 5)]
     #[Groups(['lego_set:read'])]
-    private float $rating = 0.0;
+    private string $rating = '0.0';
 
     /**
      * Public content URL for primary image.
@@ -476,7 +476,7 @@ class Set
      */
     public function getRating(): float
     {
-        return $this->rating;
+        return (float) $this->rating;
     }
 
     /**
@@ -485,7 +485,8 @@ class Set
      */
     public function setRating(float $rating): Set
     {
-        $this->rating = $rating;
+        // Doctrine hydrates decimal columns as strings
+        $this->rating = number_format($rating, 1, '.', '');
         return $this;
     }
 
