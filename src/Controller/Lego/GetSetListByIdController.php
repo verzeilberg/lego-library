@@ -4,6 +4,7 @@ namespace App\Controller\Lego;
 
 use App\Dto\Request\Lego\SetListsRequest;
 use App\Repository\Lego\SetListRepository;
+use App\Service\Lego\BoardAccessService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,6 +18,7 @@ class GetSetListByIdController extends AbstractController
         private readonly SetListRepository $setListRepository,
         private readonly UploaderHelper    $uploaderHelper,
         private readonly Security          $security,
+        private readonly BoardAccessService $boardAccessService,
     ) {}
 
     #[Route('/api/set-list/{id}', name: 'api_set_list_by_id', methods: ['GET'])]
@@ -33,11 +35,18 @@ class GetSetListByIdController extends AbstractController
         }
 
         $userData = $user->getUserData();
+        if (!$this->boardAccessService->canView($setList, $userData)) {
+            return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
         $isShared = $setList->getUserData() !== $userData;
         $ownerData = $setList->getUserData();
 
         // Include sharedWith list so the ShareModal can manage sharing (owner or shared user)
-        $sharedWith = $setList->getSharedWith()->map(fn($ud) => $ud->getId())->getValues();
+        $canContribute = $setList->canContribute($userData);
+        $sharedWith = $canContribute
+            ? $setList->getSharedWith()->map(fn($ud) => $ud->getId())->getValues()
+            : null;
 
         $owner = null;
         if ($ownerData !== null) {
@@ -65,6 +74,9 @@ class GetSetListByIdController extends AbstractController
             $setList->getParentList()?->getId()?->toString(),
             $isShared,
             $sharedWith,
+            visibility: $setList->getVisibility()->value,
+            canEdit: $setList->canEdit($userData),
+            canContribute: $canContribute,
         ));
     }
 }

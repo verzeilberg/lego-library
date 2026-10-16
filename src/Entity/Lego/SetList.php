@@ -20,6 +20,7 @@ use App\Controller\Lego\SetListController;
 use App\Controller\Lego\ShareSetListController;
 use App\Controller\Lego\UnshareSetListController;
 use App\Entity\User\UserData;
+use App\Enum\BoardVisibility;
 use App\Repository\Lego\SetListRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -58,8 +59,13 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
                                     'description' => [
                                         'type' => 'string'
                                     ],
+                                    'visibility' => [
+                                        'type' => 'string',
+                                        'enum' => ['public', 'friends', 'private'],
+                                    ],
                                     'publicPrivate' => [
-                                        'type' => 'bool'
+                                        'type' => 'bool',
+                                        'deprecated' => true,
                                     ],
                                     'file' => [
                                         'type' => 'string',
@@ -112,7 +118,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new Delete(
             uriTemplate: '/set-list/delete/{id}',
             controller: DeleteSetListController::class,
-            security: "is_granted('ROLE_ADMIN') or user == object.getUserData()->getOwner()"
+            security: "is_granted('ROLE_ADMIN') or object.canEdit(user.getUserData())"
         ),
         new Delete(
             uriTemplate: '/set-images/delete/{id}',
@@ -170,10 +176,10 @@ class SetList
     #[Groups(['modelList:read'])]
     public ?string $description = '';
 
-    #[ORM\Column(type: 'boolean', nullable: false)]
-    #[Assert\NotNull]
+    /** Who can see this board: everyone, the owner's friends, or only the owner (and shared users). */
+    #[ORM\Column(type: 'string', length: 10, enumType: BoardVisibility::class, options: ['default' => 'private'])]
     #[Groups(['modelList:read'])]
-    public bool $public = true;
+    public BoardVisibility $visibility = BoardVisibility::Private;
 
     #[ApiProperty(types: ['https://schema.org/contentUrl'])]
     #[Groups(['modelList:read'])]
@@ -255,14 +261,30 @@ class SetList
         $this->description = $description;
     }
 
+    public function getVisibility(): BoardVisibility
+    {
+        return $this->visibility;
+    }
+
+    public function setVisibility(BoardVisibility $visibility): void
+    {
+        $this->visibility = $visibility;
+    }
+
     public function isPublic(): bool
     {
-        return $this->public;
+        return $this->visibility === BoardVisibility::Public;
     }
 
     public function setPublic(bool $public): void
     {
-        $this->public = $public;
+        $this->visibility = $public ? BoardVisibility::Public : BoardVisibility::Private;
+    }
+
+    /** Whether the owner's friends get to see this board (public or friends-only). */
+    public function isVisibleToFriends(): bool
+    {
+        return $this->visibility !== BoardVisibility::Private;
     }
 
     public function getParentList(): ?self
@@ -379,6 +401,43 @@ class SetList
     public function isSharedWith(UserData $userData): bool
     {
         return $this->sharedWith->contains($userData);
+    }
+
+    /**
+     * Whether the user may add sets and sub-boards here: they own or were shared
+     * this board or any board above it.
+     */
+    public function canContribute(UserData $userData): bool
+    {
+        for ($board = $this; $board !== null; $board = $board->getParentList()) {
+            if ($board->getUserData() === $userData || $board->isSharedWith($userData)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether the user may edit, move or delete this board itself. A shared user can
+     * edit boards inside the shared board, but not the shared board itself.
+     */
+    public function canEdit(UserData $userData): bool
+    {
+        return $this->userData === $userData
+            || ($this->parentList !== null && $this->parentList->canContribute($userData));
+    }
+
+    /** Whether $board is this board or one of its sub-boards. */
+    public function contains(self $board): bool
+    {
+        for (; $board !== null; $board = $board->getParentList()) {
+            if ($board === $this) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

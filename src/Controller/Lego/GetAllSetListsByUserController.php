@@ -68,6 +68,7 @@ class GetAllSetListsByUserController extends AbstractController
                     $owner,
                     $set->getParentList()?->getId()?->toString(),
                     $isShared,
+                    visibility: $set->getVisibility()->value,
                 );
             }
         }

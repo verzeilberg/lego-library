@@ -31,14 +31,15 @@ class UnshareSetListController extends AbstractController
             return new JsonResponse(['message' => 'Board not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $userData = $user->getUserData();
-        if ($setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
-            return new JsonResponse(['message' => 'Only the board owner or a shared user can unshare'], Response::HTTP_FORBIDDEN);
-        }
-
         $targetUser = $this->userDataRepository->find($userId);
         if (!$targetUser) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // The owner can unshare anyone; a shared user can only remove themselves
+        $userData = $user->getUserData();
+        if ($setList->getUserData() !== $userData && $targetUser !== $userData) {
+            return new JsonResponse(['message' => 'Only the board owner can unshare'], Response::HTTP_FORBIDDEN);
         }
 
         if (!$setList->isSharedWith($targetUser)) {

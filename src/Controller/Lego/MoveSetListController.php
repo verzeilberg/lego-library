@@ -32,13 +32,9 @@ class MoveSetListController extends AbstractController
             return new JsonResponse(['message' => 'Board not found'], Response::HTTP_NOT_FOUND);
         }
 
+        // Owner, or a shared user moving a board inside the shared board (not the shared board itself)
         $userData = $user->getUserData();
-        $isOwner = $setList->getUserData() === $userData;
-        $isInSharedBoard = !$isOwner && (
-            $setList->isSharedWith($userData) ||
-            ($setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData))
-        );
-        if (!$isOwner && !$isInSharedBoard) {
+        if (!$setList->canEdit($userData)) {
             return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
@@ -57,9 +53,7 @@ class MoveSetListController extends AbstractController
             return new JsonResponse(['message' => 'Target board not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $isTargetOwner = $targetParent->getUserData() === $userData;
-        $isTargetShared = !$isTargetOwner && $targetParent->isSharedWith($userData);
-        if (!$isTargetOwner && !$isTargetShared) {
+        if (!$targetParent->canContribute($userData)) {
             return new JsonResponse(['message' => 'Target board does not belong to you or is not shared with you'], Response::HTTP_FORBIDDEN);
         }
 
@@ -67,7 +61,7 @@ class MoveSetListController extends AbstractController
             return new JsonResponse(['message' => 'Board is already in this parent'], Response::HTTP_BAD_REQUEST);
         }
 
-        if ($targetParent === $setList) {
+        if ($setList->contains($targetParent)) {
             return new JsonResponse(['message' => 'Cannot move a board into itself'], Response::HTTP_BAD_REQUEST);
         }
 

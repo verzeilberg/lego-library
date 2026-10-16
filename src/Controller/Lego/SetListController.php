@@ -3,6 +3,7 @@ namespace App\Controller\Lego;
 
 use App\Dto\Request\Lego\SetListsRequest;
 use App\Entity\Lego\SetList;
+use App\Enum\BoardVisibility;
 use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetRepository;
 use App\Repository\FriendshipRepository;
@@ -59,7 +60,9 @@ class SetListController extends AbstractController
         $parentId = $request->get('parentId');
         $title = $request->get('title');
         $description = $request->get('description');
-        $publicPrivate = $request->get('publicPrivate');
+        // 'visibility' is public/friends/private; 'publicPrivate' is the old boolean, still sent by older app versions
+        $visibility = BoardVisibility::tryFrom((string) $request->get('visibility'))
+            ?? (filter_var($request->get('publicPrivate'), FILTER_VALIDATE_BOOLEAN) ? BoardVisibility::Public : BoardVisibility::Private);
         $imageFile = $request->files->get('file');
 
         //Create a new modellist
@@ -77,14 +80,8 @@ class SetListController extends AbstractController
                 return $this->json(['result' => 'Set list not found'], Response::HTTP_NOT_FOUND);
             }
 
-            // Editing: owner or shared user can edit (including the top-level shared board itself)
-            $userData = $user->getUserData();
-            $isOwner = $setList->getUserData() === $userData;
-            $isInSharedBoard = !$isOwner && (
-                $setList->isSharedWith($userData) ||
-                ($setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData))
-            );
-            if (!$isOwner && !$isInSharedBoard) {
+            // Editing: owner, or a shared user editing a board inside the shared board (not the shared board itself)
+            if (!$setList->canEdit($user->getUserData())) {
                 return $this->json(['result' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
             }
         } else {
@@ -96,8 +93,7 @@ class SetListController extends AbstractController
                 if (!$parentBoard) {
                     return $this->json(['result' => 'Parent board not found'], Response::HTTP_NOT_FOUND);
                 }
-                $userData = $user->getUserData();
-                if ($parentBoard->getUserData() !== $userData && !$parentBoard->isSharedWith($userData)) {
+                if (!$parentBoard->canContribute($user->getUserData())) {
                     return $this->json(['result' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
                 }
             }
@@ -105,7 +101,7 @@ class SetListController extends AbstractController
 
         $setList->setTitle($title);
         $setList->setDescription($description);
-        $setList->setPublic(filter_var($publicPrivate, FILTER_VALIDATE_BOOLEAN));
+        $setList->setVisibility($visibility);
         $setList->setFile($imageFile);
         $setList->setPublicationDate(new \DateTimeImmutable());
         if (isset($parentId) && !empty($parentId)) {
@@ -129,7 +125,7 @@ class SetListController extends AbstractController
 
         $setList->setContentUrl($this->uploaderHelper->asset($setList, 'file'));
 
-        if ($isNew && filter_var($publicPrivate, FILTER_VALIDATE_BOOLEAN)) {
+        if ($isNew && $setList->isVisibleToFriends()) {
             $senderName = $userData->getUserName()
                 ?? trim($userData->getFirstName() . ' ' . $userData->getLastName());
             $friends = $this->friendshipRepository->getFriendUserDataList($userData);

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Lego;
 
+use App\Repository\FriendshipRepository;
 use App\Service\Lego\SearchSetListService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -14,6 +15,7 @@ class SearchSetListsPublicController extends AbstractController
     public function __construct(
         private readonly SearchSetListService $searchSetListService,
         private readonly Security             $security,
+        private readonly FriendshipRepository $friendshipRepository,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -33,7 +35,12 @@ class SearchSetListsPublicController extends AbstractController
             return new JsonResponse([], Response::HTTP_OK);
         }
 
-        $results = $this->searchSetListService->searchPublic($query, $limit, $offset, $user->getUserData()->getId());
+        $friendIds = array_map(
+            fn($friend) => $friend->getId(),
+            $this->friendshipRepository->getFriendUserDataList($user->getUserData()),
+        );
+
+        $results = $this->searchSetListService->searchPublic($query, $limit, $offset, $user->getUserData()->getId(), $friendIds);
 
         return new JsonResponse($results, Response::HTTP_OK);
     }

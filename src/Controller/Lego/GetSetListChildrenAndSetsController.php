@@ -5,6 +5,7 @@ namespace App\Controller\Lego;
 use App\Dto\Request\Lego\SetListsRequest;
 use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetListSetRepository;
+use App\Service\Lego\BoardAccessService;
 use App\Service\Lego\SetListService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -20,6 +21,7 @@ class GetSetListChildrenAndSetsController extends AbstractController
         private readonly SetListSetRepository $setListSetRepository,
         private readonly SetListService       $setListService,
         private readonly Security             $security,
+        private readonly BoardAccessService   $boardAccessService,
     ) {}
 
     public function __invoke(string $id, Request $request): JsonResponse
@@ -34,9 +36,9 @@ class GetSetListChildrenAndSetsController extends AbstractController
             return new JsonResponse(['message' => 'Set list not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Only allow access if the user is the owner or the board is shared with them or it's public
+        // Only allow access if the user may see this board (public, friends-only for friends, owner or shared)
         $userData = $user->getUserData();
-        if ($setList->getUserData() !== $userData && !$setList->isSharedWith($userData) && !$setList->isPublic()) {
+        if (!$this->boardAccessService->canView($setList, $userData)) {
             return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
@@ -52,6 +54,12 @@ class GetSetListChildrenAndSetsController extends AbstractController
             $childLists = $setList->getChildLists();
             $setLinks   = $setList->getSetLinks();
         }
+
+        // Hide sub-boards this user may not see (e.g. a private sub-board inside a public board)
+        $childLists = array_filter(
+            is_array($childLists) ? $childLists : iterator_to_array($childLists, false),
+            fn($child) => $this->boardAccessService->canView($child, $userData),
+        );
 
         $result = $this->setListService->getCombinedListWithSets($childLists, $setLinks);
 

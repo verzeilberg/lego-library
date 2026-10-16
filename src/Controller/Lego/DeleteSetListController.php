@@ -51,8 +51,8 @@ class DeleteSetListController extends AbstractController
         }
 
         try {
-            $userData = $user->getUserData();
-            if (!$setList->getUserData() || $setList->getUserData()->getOwner() === $user || $setList->isSharedWith($userData)) {
+            // Owner, or a shared user deleting a board inside the shared board (not the shared board itself)
+            if (!$setList->getUserData() || $setList->canEdit($user->getUserData())) {
                 $this->entityManager->remove($setList);
                 $this->entityManager->flush();
             } else {

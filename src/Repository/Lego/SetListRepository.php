@@ -5,6 +5,7 @@ namespace App\Repository\Lego;
 use App\Entity\Lego\SetList;
 use App\Entity\User\UserData;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -89,14 +90,16 @@ class SetListRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find public boards excluding a specific user's boards.
+     * Find public boards, plus friends-only boards of the given friends, excluding a specific user's boards.
      *
+     * @param int[] $friendIds UserData ids whose friends-only boards may be included
      * @return SetList[]
      */
-    public function findPublicExcludingUser(string $excludeUserDataId, int $limit, int $offset): array
+    public function findPublicExcludingUser(string $excludeUserDataId, int $limit, int $offset, array $friendIds = []): array
     {
-        return $this->createQueryBuilder('sl')
-            ->where('sl.public = true')
+        $qb = $this->createQueryBuilder('sl');
+
+        return $this->whereVisibleTo($qb, $friendIds)
             ->andWhere('sl.userData != :excludeId')
             ->setParameter('excludeId', $excludeUserDataId)
             ->orderBy('sl.publicationDate', 'DESC')
@@ -131,28 +134,29 @@ class SetListRepository extends ServiceEntityRepository
      *
      * @return SetList[]
      */
-    public function searchPublic(string $query, int $limit, int $offset, ?string $excludeUserDataId = null): array
+    public function searchPublic(string $query, int $limit, int $offset, ?string $excludeUserDataId = null, array $friendIds = []): array
     {
         $q = '%' . mb_strtolower($query) . '%';
+
+        $matches = 'LOWER(sl.title) LIKE :q
+                 OR LOWER(sl.description) LIKE :q
+                 OR LOWER(s.name) LIKE :q
+                 OR LOWER(s.baseNumber) LIKE :q
+                 OR LOWER(s.number) LIKE :q
+                 OR LOWER(t.name) LIKE :q';
 
         $qb = $this->createQueryBuilder('sl')
             ->leftJoin('sl.setLinks', 'sls')
             ->leftJoin('sls.set', 's')
             ->leftJoin('s.theme', 't')
-            ->where('sl.public = true')
-            ->andWhere(
-                'LOWER(sl.title) LIKE :q
-                 OR LOWER(sl.description) LIKE :q
-                 OR LOWER(s.name) LIKE :q
-                 OR LOWER(s.baseNumber) LIKE :q
-                 OR LOWER(s.number) LIKE :q
-                 OR LOWER(t.name) LIKE :q'
-            )
             ->setParameter('q', $q);
+        $this->whereVisibleTo($qb, $friendIds);
 
         if (is_numeric($query) && (int) $query > 0) {
-            $qb->orWhere('sl.public = true AND s.year = :year')
+            $qb->andWhere('(' . $matches . ' OR s.year = :year)')
                ->setParameter('year', (int) $query);
+        } else {
+            $qb->andWhere('(' . $matches . ')');
         }
 
         if ($excludeUserDataId !== null) {
@@ -169,4 +173,19 @@ class SetListRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Restrict to public boards, plus friends-only boards owned by one of $friendIds.
+     *
+     * @param int[] $friendIds
+     */
+    private function whereVisibleTo(QueryBuilder $qb, array $friendIds): QueryBuilder
+    {
+        if ($friendIds === []) {
+            return $qb->where("sl.visibility = 'public'");
+        }
+
+        return $qb
+            ->where("sl.visibility = 'public' OR (sl.visibility = 'friends' AND sl.userData IN (:friendIds))")
+            ->setParameter('friendIds', $friendIds);
+    }
 }
