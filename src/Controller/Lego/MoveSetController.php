@@ -38,9 +38,7 @@ class MoveSetController extends AbstractController
         }
 
         $userData = $user->getUserData();
-        $isSourceOwner = $sourceList->getUserData() === $userData;
-        $isSourceShared = !$isSourceOwner && $sourceList->isSharedWith($userData);
-        if (!$isSourceOwner && !$isSourceShared) {
+        if (!$sourceList->canContribute($userData)) {
             return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
@@ -55,9 +53,7 @@ class MoveSetController extends AbstractController
             return new JsonResponse(['message' => 'Target board not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $isTargetOwner = $targetList->getUserData() === $userData;
-        $isTargetShared = !$isTargetOwner && $targetList->isSharedWith($userData);
-        if (!$isTargetOwner && !$isTargetShared) {
+        if (!$targetList->canContribute($userData)) {
             return new JsonResponse(['message' => 'Target board does not belong to you or is not shared with you'], Response::HTTP_FORBIDDEN);
         }
 

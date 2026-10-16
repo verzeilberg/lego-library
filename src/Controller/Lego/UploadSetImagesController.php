@@ -57,9 +57,8 @@ class UploadSetImagesController extends AbstractController
             return new JsonResponse(['error' => 'Set list not found'], 404);
         }
 
-        // Check access (owner or shared)
-        $userData = $user->getUserData();
-        if ($setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
+        // Check access (owner, or shared on this board or a board above it)
+        if (!$setList->canContribute($user->getUserData())) {
             return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 

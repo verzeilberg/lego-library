@@ -55,6 +55,7 @@ class SearchSetListsByUserController extends AbstractController
                 null,
                 $setList->getParentList()?->getId()?->toString(),
                 $isShared,
+                visibility: $setList->getVisibility()->value,
             );
         }, $results);
 

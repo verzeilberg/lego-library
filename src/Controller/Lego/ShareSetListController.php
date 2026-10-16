@@ -4,6 +4,7 @@ namespace App\Controller\Lego;
 
 use App\Entity\Lego\SetList;
 use App\Repository\UserDataRepository;
+use App\Service\Lego\BoardAccessService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -17,6 +18,7 @@ class ShareSetListController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly UserDataRepository $userDataRepository,
+        private readonly BoardAccessService $boardAccessService,
     ) {}
 
     public function __invoke(string $id, string $userId, Security $security): JsonResponse
@@ -32,13 +34,17 @@ class ShareSetListController extends AbstractController
         }
 
         $userData = $user->getUserData();
-        if ($setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
-            return new JsonResponse(['message' => 'Only the board owner or a shared user can share'], Response::HTTP_FORBIDDEN);
+        if ($setList->getUserData() !== $userData) {
+            return new JsonResponse(['message' => 'Only the board owner can share'], Response::HTTP_FORBIDDEN);
         }
 
         $targetUser = $this->userDataRepository->find($userId);
         if (!$targetUser) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$this->boardAccessService->areFriends($userData, $targetUser)) {
+            return new JsonResponse(['message' => 'You can only share a board with friends'], Response::HTTP_FORBIDDEN);
         }
 
         if ($setList->isSharedWith($targetUser)) {

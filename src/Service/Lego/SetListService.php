@@ -33,6 +33,7 @@ readonly class SetListService
                 $this->uploaderHelper->asset($list, 'file'),
                 null,
                 $list->getParentList()?->getId()?->toString(),
+                visibility: $list->getVisibility()->value,
             );
         }
 

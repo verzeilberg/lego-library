@@ -62,8 +62,8 @@ class SetService
             return new JsonResponse(['message' => 'Set list not found'], 404);
         }
 
-        //Check if the user has access (owner or shared)
-        if ($userData && $setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
+        //Check if the user has access (owner, or shared on this board or a board above it)
+        if ($userData && !$setList->canContribute($userData)) {
             return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
@@ -83,7 +83,7 @@ class SetService
             $this->entityManager->persist($link);
             $this->entityManager->flush();
 
-            $this->notifyFriendsOfNewSet($setList->getUserData(), $legoSet->getName(), $setList->getTitle(), $setList->isPublic());
+            $this->notifyFriendsOfNewSet($setList->getUserData(), $legoSet->getName(), $setList->getTitle(), $setList->isVisibleToFriends());
 
             return new JsonResponse(
                 [
@@ -143,7 +143,7 @@ class SetService
 
         $this->entityManager->flush();
 
-        $this->notifyFriendsOfNewSet($setList->getUserData(), $set->getName(), $setList->getTitle(), $setList->isPublic());
+        $this->notifyFriendsOfNewSet($setList->getUserData(), $set->getName(), $setList->getTitle(), $setList->isVisibleToFriends());
 
         return new JsonResponse(
             [
@@ -154,9 +154,9 @@ class SetService
 
     }
 
-    private function notifyFriendsOfNewSet(?UserData $owner, string $setName, string $boardTitle, bool $isPublic): void
+    private function notifyFriendsOfNewSet(?UserData $owner, string $setName, string $boardTitle, bool $visibleToFriends): void
     {
-        if (!$isPublic || !$owner) {
+        if (!$visibleToFriends || !$owner) {
             return;
         }
 
@@ -201,7 +201,7 @@ class SetService
         }
 
         //Check if the user has access (owner or shared)
-        if ($userData && $setList->getUserData() !== $userData && !$setList->isSharedWith($userData)) {
+        if ($userData && !$setList->canContribute($userData)) {
             return new JsonResponse(['message' => 'Unauthorized'], 403);
         }
 

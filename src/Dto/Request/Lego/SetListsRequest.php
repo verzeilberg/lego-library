@@ -39,6 +39,18 @@ final class SetListsRequest
     #[Groups(['setList:read'])]
     public ?array $sharedWith = null;
 
+    /** 'public', 'friends' or 'private'. */
+    #[Groups(['setList:read'])]
+    public string $visibility;
+
+    /** Whether the current user may edit, move or delete this board. */
+    #[Groups(['setList:read'])]
+    public ?bool $canEdit = null;
+
+    /** Whether the current user may add sets and sub-boards to this board. */
+    #[Groups(['setList:read'])]
+    public ?bool $canContribute = null;
+
     public function __construct(
         string $id,
         string $title,
@@ -50,6 +62,9 @@ final class SetListsRequest
         ?string $parentId = null,
         bool $shared = false,
         ?array $sharedWith = null,
+        ?string $visibility = null,
+        ?bool $canEdit = null,
+        ?bool $canContribute = null,
     ) {
         $this->id = $id;
         $this->title = $title;
@@ -61,6 +76,9 @@ final class SetListsRequest
         $this->parentId = $parentId;
         $this->shared = $shared;
         $this->sharedWith = $sharedWith;
+        $this->visibility = $visibility ?? ($isPublic ? 'public' : 'private');
+        $this->canEdit = $canEdit;
+        $this->canContribute = $canContribute;
     }
 
 }

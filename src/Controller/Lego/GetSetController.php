@@ -7,6 +7,7 @@ use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetListSetRepository;
 use App\Repository\Lego\SetRatingRepository;
 use App\Repository\Lego\SetRepository;
+use App\Service\Lego\BoardAccessService;
 use App\Service\Lego\RebrickableClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -22,7 +23,8 @@ class GetSetController extends AbstractController
         private readonly SetRepository        $setRepository,
         private readonly SetListRepository    $setListRepository,
         private readonly SetListSetRepository $setListSetRepository,
-        private readonly SetRatingRepository  $setRatingRepository
+        private readonly SetRatingRepository  $setRatingRepository,
+        private readonly BoardAccessService   $boardAccessService,
     )
     {
     }
@@ -62,10 +64,7 @@ class GetSetController extends AbstractController
             return new JsonResponse(['message' => 'Set list not found'], 404);
         }
 
-        $userData = $user->getUserData();
-        $isInSharedBoard = $setList->isSharedWith($userData) ||
-            ($setList->getParentList() !== null && $setList->getParentList()->isSharedWith($userData));
-        if (!$setList->isPublic() && $setList->getUserData() !== $userData && !$isInSharedBoard) {
+        if (!$this->boardAccessService->canView($setList, $user->getUserData())) {
             return new JsonResponse(['message' => 'Set list not found'], 404);
         }
 

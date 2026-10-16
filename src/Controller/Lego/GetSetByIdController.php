@@ -38,7 +38,7 @@ class GetSetByIdController extends AbstractController
         $setList = $this->setListRepository->find($id);
         if ($setList->getUserData()->getOwner() === $user) {
             $path = $this->uploaderHelper->asset($setList, 'file');
-            $setListRequest = new SetListsRequest($setList->getId(), $setList->getTitle(), $setList->getDescription(), $setList->isPublic(), false, $path, null, $setList->getParentList()?->getId()?->toString());
+            $setListRequest = new SetListsRequest($setList->getId(), $setList->getTitle(), $setList->getDescription(), $setList->isPublic(), false, $path, null, $setList->getParentList()?->getId()?->toString(), visibility: $setList->getVisibility()->value);
 
             return new JsonResponse($setListRequest, Response::HTTP_OK);
 

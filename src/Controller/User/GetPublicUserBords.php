@@ -2,8 +2,11 @@
 
 namespace App\Controller\User;
 
+use App\Enum\BoardVisibility;
 use App\Repository\Lego\SetListRepository;
 use App\Repository\UserDataRepository;
+use App\Service\Lego\BoardAccessService;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +20,8 @@ class GetPublicUserBords extends AbstractController
         private readonly UserDataRepository $userDataRepository,
         private readonly SetListRepository  $setListRepository,
         private readonly UploaderHelper     $uploaderHelper,
+        private readonly BoardAccessService $boardAccessService,
+        private readonly Security           $security,
     ) {}
 
     #[Route('/api/public/user/{id}/bords', name: 'api_public_user_bords', methods: ['GET'])]
@@ -32,8 +37,14 @@ class GetPublicUserBords extends AbstractController
         $page   = max(1, (int) $request->query->get('page', 1));
         $offset = ($page - 1) * $limit;
 
+        // Friends also see this user's friends-only boards
+        $visibilities = [BoardVisibility::Public->value];
+        if ($this->boardAccessService->areFriends($userData, $this->security->getUser()?->getUserData())) {
+            $visibilities[] = BoardVisibility::Friends->value;
+        }
+
         $setLists = $this->setListRepository->findBy(
-            ['userData' => $userData, 'public' => true, 'parentList' => null],
+            ['userData' => $userData, 'visibility' => $visibilities, 'parentList' => null],
             ['publicationDate' => 'DESC'],
             $limit,
             $offset

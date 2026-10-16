@@ -3,6 +3,7 @@
 namespace App\Controller\Lego;
 
 use App\Dto\Request\Lego\SetListsRequest;
+use App\Repository\FriendshipRepository;
 use App\Repository\Lego\SetListRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -18,6 +19,7 @@ class GetSetListsPublic extends AbstractController
         private readonly SetListRepository  $setListRepository,
         private readonly UploaderHelper     $uploaderHelper,
         private readonly Security           $security,
+        private readonly FriendshipRepository $friendshipRepository,
     )
     {
     }
@@ -38,10 +40,16 @@ class GetSetListsPublic extends AbstractController
         $page   = max(1, (int) $request->query->get('page', 1));
         $offset = ($page - 1) * $limit;
 
+        $friendIds = array_map(
+            fn($friend) => $friend->getId(),
+            $this->friendshipRepository->getFriendUserDataList($user->getUserData()),
+        );
+
         $setLists = $this->setListRepository->findPublicExcludingUser(
             $user->getUserData()->getId(),
             $limit,
-            $offset
+            $offset,
+            $friendIds,
         );
 
         $setLists = array_map(function ($set) {
@@ -62,7 +70,7 @@ class GetSetListsPublic extends AbstractController
                 ];
             }
 
-            return new SetListsRequest($set->getId(), $set->getTitle(), $set->getDescription(), $set->isPublic(), false, $path, $owner, $set->getParentList()?->getId()?->toString());
+            return new SetListsRequest($set->getId(), $set->getTitle(), $set->getDescription(), $set->isPublic(), false, $path, $owner, $set->getParentList()?->getId()?->toString(), visibility: $set->getVisibility()->value);
         }, $setLists);
 
 

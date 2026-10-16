@@ -20,9 +20,9 @@ readonly class SearchSetListService
      *
      * @return SetListsRequest[]
      */
-    public function searchPublic(string $query, int $limit, int $offset, ?string $excludeUserDataId = null): array
+    public function searchPublic(string $query, int $limit, int $offset, ?string $excludeUserDataId = null, array $friendIds = []): array
     {
-        $setLists = $this->setListRepository->searchPublic($query, $limit, $offset, $excludeUserDataId);
+        $setLists = $this->setListRepository->searchPublic($query, $limit, $offset, $excludeUserDataId, $friendIds);
 
         return array_map(function (SetList $setList) {
             $filePath = $this->uploaderHelper->asset($setList, 'file');
@@ -51,6 +51,7 @@ readonly class SearchSetListService
                 $filePath,
                 $owner,
                 $setList->getParentList()?->getId()?->toString(),
+                visibility: $setList->getVisibility()->value,
             );
         }, $setLists);
     }
