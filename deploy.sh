@@ -192,7 +192,9 @@ fi
 # 11. Reload web server & PHP-FPM
 # ─────────────────────────────────────────────
 info "Reloading services..."
-if systemctl is-active --quiet php8.2-fpm 2>/dev/null; then
+if systemctl is-active --quiet php8.4-fpm 2>/dev/null; then
+  systemctl reload php8.4-fpm && success "php8.4-fpm reloaded"
+elif systemctl is-active --quiet php8.2-fpm 2>/dev/null; then
   systemctl reload php8.2-fpm && success "php8.2-fpm reloaded"
 elif systemctl is-active --quiet php8.3-fpm 2>/dev/null; then
   systemctl reload php8.3-fpm && success "php8.3-fpm reloaded"
