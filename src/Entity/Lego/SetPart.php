@@ -10,7 +10,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: SetPartRepository::class)]
 #[ORM\Table(
     name: 'lego_set_part',
-    uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_set_part_color', columns: ['model_number','part_color_id'])]
+    uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_set_part_color', columns: ['model_number','part_color_id','is_spare'])]
 )]
 class SetPart
 {
@@ -40,6 +40,10 @@ class SetPart
     #[ORM\Column(type: 'integer')]
     private int $quantity;
 
+    #[Groups(['lego_set:read'])]
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isSpare = false;
+
     // === Convenience ===
     public function getPart(): Part { return $this->partColor->getPart(); }
     public function getColor(): Color { return $this->partColor->getColor(); }
@@ -52,4 +56,6 @@ class SetPart
     public function setPartColor(PartColor $partColor): self { $this->partColor = $partColor; return $this; }
     public function getQuantity(): int { return $this->quantity; }
     public function setQuantity(int $quantity): self { $this->quantity = $quantity; return $this; }
+    public function isSpare(): bool { return $this->isSpare; }
+    public function setIsSpare(bool $isSpare): self { $this->isSpare = $isSpare; return $this; }
 }

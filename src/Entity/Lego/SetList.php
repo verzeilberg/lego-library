@@ -4,12 +4,14 @@ namespace App\Entity\Lego;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\DeleteSetImageController;
 use App\Controller\Lego\DeleteSetListController;
 use App\Controller\Lego\GetAllSetListsByUserController;
+use App\Controller\Lego\GetBoardMissingPartsController;
 use App\Controller\Lego\GetSetListChildrenAndSetsController;
 use App\Controller\Lego\GetSetListsByUserController;
 use App\Controller\Lego\GetSetListsPublic;
@@ -148,6 +150,12 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new GetCollection(
             uriTemplate: '/set-lists/{id}',
             controller: GetSetListChildrenAndSetsController::class,
+        ),
+        new Get(
+            uriTemplate: '/set-list/{id}/missing-parts',
+            controller: GetBoardMissingPartsController::class,
+            shortName: 'Missing parts of all sets in a board and its sub-boards',
+            read: false,
         )
     ],
     normalizationContext: ['groups' => ['modelList:read']],

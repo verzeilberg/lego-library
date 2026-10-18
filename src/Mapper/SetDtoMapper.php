@@ -74,6 +74,7 @@ final readonly class SetDtoMapper
             $partDto->partNumber = $part->getPartNumber();
             $partDto->name = $part->getName();
             $partDto->quantity = $setPart->getQuantity();
+            $partDto->isSpare = $setPart->isSpare();
 
             $partDto->colorId = $color->getId();
             $partDto->colorName = $color->getName();

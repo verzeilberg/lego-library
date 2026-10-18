@@ -33,6 +33,10 @@ class CreateSetRequest
     #[Groups(['model:read', 'model:create', 'model:update'])]
     public bool $addLegoMinifigs = false;
 
+    #[Assert\NotNull]
+    #[Groups(['model:read', 'model:create', 'model:update'])]
+    public bool $hasInstructions = true;
+
     /**
      * @return string
      */
@@ -120,6 +124,24 @@ class CreateSetRequest
     public function setAddLegoMinifigs(bool $addLegoMinifigs): CreateSetRequest
     {
         $this->addLegoMinifigs = $addLegoMinifigs;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasInstructions(): bool
+    {
+        return $this->hasInstructions;
+    }
+
+    /**
+     * @param bool $hasInstructions
+     * @return CreateSetRequest
+     */
+    public function setHasInstructions(bool $hasInstructions): CreateSetRequest
+    {
+        $this->hasInstructions = $hasInstructions;
         return $this;
     }
 
