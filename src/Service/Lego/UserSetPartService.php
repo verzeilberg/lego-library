@@ -3,6 +3,8 @@
 namespace App\Service\Lego;
 
 use App\Dto\Request\Lego\CreateDefectPartsRequest;
+use App\Entity\Lego\SetListSet;
+use App\Entity\Lego\SetPart;
 use App\Entity\Lego\UserSetPart;
 use App\Repository\Lego\ColorRepository;
 use App\Repository\Lego\PartColorRepository;
@@ -38,6 +40,18 @@ readonly class UserSetPartService
             );
         }
 
+        if ($dto->setPartUuid !== null) {
+            $setPart = $this->setPartRepository->find($dto->setPartUuid);
+            if ($setPart === null || $setPart->getModel()?->getNumber() !== $setListSet->getSet()->getNumber()) {
+                return new JsonResponse(
+                    ['error' => 'Part not found for this set'],
+                    Response::HTTP_NOT_FOUND
+                );
+            }
+
+            return $this->saveDefectPart($setListSet, $setPart, $dto);
+        }
+
         $part = $this->partRepository->find($dto->partId);
         if ($part === null) {
             return new JsonResponse(
@@ -64,8 +78,6 @@ readonly class UserSetPartService
 
         $setPart = $this->setPartRepository->findOneByModelAndPartColor($setListSet->getSet(), $partColor);
 
-
-
         if ($setPart === null) {
             return new JsonResponse(
                 ['error' => sprintf('Part (%s) with the given color (%s) not found in this set (%s).', $dto->partId, $partColor->getId(),$dto->setNumber )],
@@ -73,6 +85,11 @@ readonly class UserSetPartService
             );
         }
 
+        return $this->saveDefectPart($setListSet, $setPart, $dto);
+    }
+
+    private function saveDefectPart(SetListSet $setListSet, SetPart $setPart, CreateDefectPartsRequest $dto): JsonResponse
+    {
         $userSetPart = $this->entityManager->getRepository(UserSetPart::class)->findOneBy([
             'setListSet' => $setListSet,
             'setPart'    => $setPart,

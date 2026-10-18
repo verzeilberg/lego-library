@@ -98,6 +98,7 @@ readonly class PartService
             $partNumber = $row['part']['part_num'];
             $colorId = $row['color']['id'];
             $quantity = $row['quantity'];
+            $isSpare = (bool) ($row['is_spare'] ?? false);
             $partColorKey = $partNumber . '-' . $colorId;
 
             // --- PART ---
@@ -143,14 +144,16 @@ readonly class PartService
             // --- SETPART ---
             $setPart = $this->setPartRepository->findOneBy([
                 'model' => $set,
-                'partColor' => $partColor
+                'partColor' => $partColor,
+                'isSpare' => $isSpare,
             ]);
 
             if (!$setPart) {
                 $setPart = new SetPart();
                 $setPart->setModel($set)
                     ->setPartColor($partColor)
-                    ->setQuantity($quantity);
+                    ->setQuantity($quantity)
+                    ->setIsSpare($isSpare);
                 $this->entityManager->persist($setPart);
             }
 

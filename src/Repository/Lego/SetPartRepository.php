@@ -87,6 +87,8 @@ class SetPartRepository extends ServiceEntityRepository
             ->setParameter('model', $model)
             ->andWhere('sp.partColor = :partColor')
             ->setParameter('partColor', $partColor)
+            ->orderBy('sp.isSpare', 'ASC')
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
     }

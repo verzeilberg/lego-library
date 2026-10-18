@@ -9,6 +9,7 @@ class SetPartDTO
     public string $name;
 
     public int $quantity;
+    public bool $isSpare = false;
 
     public int $missingQuantity = 0;
     public int $damagedQuantity = 0;

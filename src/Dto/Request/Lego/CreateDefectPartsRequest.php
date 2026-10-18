@@ -19,6 +19,13 @@ class CreateDefectPartsRequest
     #[Groups(['user:create'])]
     public string $partId;
 
+    /**
+     * Id of the specific SetPart row. Preferred over partId + colorId,
+     * because a set can contain the same part/color twice (regular + spare).
+     */
+    #[Groups(['user:create'])]
+    public ?string $setPartUuid = null;
+
     #[Assert\NotNull]
     #[Assert\Type('integer')]
     #[Groups(['user:create'])]

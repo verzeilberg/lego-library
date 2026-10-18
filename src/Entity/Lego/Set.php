@@ -6,12 +6,14 @@ use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\CreateSetController;
 use App\Controller\Lego\DeleteSetFromSetListController;
 use App\Controller\Lego\GetSetController;
 use App\Controller\Lego\MoveSetController;
+use App\Controller\Lego\UpdateSetInstructionsController;
 use App\Controller\Lego\UploadSetImagesController;
 use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\Media\MediaObject;
@@ -113,6 +115,30 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
                     ])
                 )
             ),
+            deserialize: false,
+        ),
+        new Patch(
+            uriTemplate: '/lego/set-list/{listId}/set/{setNumber}/instructions',
+            controller: UpdateSetInstructionsController::class,
+            shortName: 'Update instructions booklet status of a lego set in a board',
+            openapi: new Model\Operation(
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/merge-patch+json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'hasInstructions' => [
+                                        'type' => 'boolean'
+                                    ]
+                                ],
+                                'required' => ['hasInstructions'],
+                            ]
+                        ]
+                    ])
+                )
+            ),
+            read: false,
             deserialize: false,
         ),
     ],
