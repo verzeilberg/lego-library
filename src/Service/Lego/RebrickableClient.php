@@ -23,6 +23,17 @@ class RebrickableClient
     }
 
     /**
+     * Rebrickable set numbers have a version suffix ("60179-1"). Adds "-1" when the
+     * number has none ("60179"), but leaves a given version alone ("60179-1", "60179-2").
+     */
+    private function normalizeSetNumber(string $setNum): string
+    {
+        $setNum = trim($setNum);
+
+        return str_contains($setNum, '-') ? $setNum : $setNum . '-1';
+    }
+
+    /**
      * @param string $endpoint
      * @param array $params
      * @param int $maxRetries
@@ -100,22 +111,36 @@ class RebrickableClient
      */
     public function getSetById(string $setNum): array
     {
-        // Check if the set number already contains a dash
-        $parts = explode('-', $setNum);
-        if (end($parts) !== '-1') {
-            $setNum .= '-1';
-        }
+        $setNum = $this->normalizeSetNumber($setNum);
 
         return $this->request("/sets/{$setNum}/");
     }
 
+    /**
+     * Fetches part details (incl. external ids like BrickLink) for multiple part numbers.
+     *
+     * @param string[] $partNumbers
+     */
+    public function getPartsByNumbers(array $partNumbers): array
+    {
+        return $this->request('/parts/', [
+            'part_nums' => implode(',', $partNumbers),
+            'inc_part_details' => 1,
+            'page_size' => 1000,
+        ]);
+    }
+
+    /**
+     * Fetches all colors (incl. external ids like BrickLink).
+     */
+    public function getColors(): array
+    {
+        return $this->request('/colors/', ['page_size' => 1000]);
+    }
+
     public function getPartsBySetId(string $setNum, $pageSize = 1000): array
     {
-        // Check if the set number already contains a dash
-        $parts = explode('-', $setNum);
-        if (end($parts) !== '-1') {
-            $setNum .= '-1';
-        }
+        $setNum = $this->normalizeSetNumber($setNum);
 
         return $this->request("/sets/{$setNum}/parts/?page_size={$pageSize}");
     }
@@ -144,11 +169,7 @@ class RebrickableClient
     public function getMiniFigsBySetNumber(string $setNum): array
     {
 
-        // Check if the set number already contains a dash
-        $parts = explode('-', $setNum);
-        if (end($parts) !== '-1') {
-            $setNum .= '-1';
-        }
+        $setNum = $this->normalizeSetNumber($setNum);
 
         return $this->request("/sets/{$setNum}/minifigs/");
     }

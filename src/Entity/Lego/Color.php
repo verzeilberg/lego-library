@@ -27,6 +27,10 @@ class Color
     #[Groups(['color:read','lego_set:read'])]
     private bool $isTrans = false;
 
+    /** Color id on BrickLink (differs from Rebrickable), filled on demand */
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $brickLinkId = null;
+
     // === Getters / Setters ===
     public function getId(): int { return $this->id; }
     public function setId(int $id): self { $this->id = $id; return $this; }
@@ -39,6 +43,9 @@ class Color
 
     public function isTrans(): bool { return $this->isTrans; }
     public function setIsTrans(bool $isTrans): self { $this->isTrans = $isTrans; return $this; }
+
+    public function getBrickLinkId(): ?int { return $this->brickLinkId; }
+    public function setBrickLinkId(?int $brickLinkId): self { $this->brickLinkId = $brickLinkId; return $this; }
 
     public function getHexColor(): string { return '#' . $this->rgb; }
 }

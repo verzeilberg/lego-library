@@ -68,9 +68,23 @@ class SetService
         }
 
         //Check if a set already exists
-        $legoSet = $this->setRepository->findOneBy(['baseNumber' => $request->getLegoNmbr()]);
+        // "60179" matches on base number, "60179-1" on the full number incl. version
+        $legoNmbr = trim($request->getLegoNmbr());
+        $legoSet = str_contains($legoNmbr, '-')
+            ? $this->setRepository->find($legoNmbr)
+            : $this->setRepository->findOneBy(['baseNumber' => $legoNmbr]);
 
         if ($legoSet !== null) {
+
+            // Already on this board: don't add it twice (uniq_set_list_set)
+            if ($this->setListSetRepository->findOneBy(['set' => $legoSet, 'setList' => $setList]) !== null) {
+                return new JsonResponse(
+                    [
+                        'message' => 'Set is already in this list',
+                        'set' => $legoSet->getNumber(),
+                    ]
+                );
+            }
 
             $link = new SetListSet();
             $link->setSet($legoSet);

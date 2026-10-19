@@ -2,28 +2,25 @@
 
 namespace App\Controller\Lego;
 
-use App\Entity\Lego\SetList;
-use App\Entity\Lego\UserSetPart;
-use App\Entity\User\UserData;
 use App\Repository\Lego\SetListRepository;
 use App\Service\Lego\BoardAccessService;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\Lego\MissingItemsService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Returns all missing parts of every set in a board, including the sets
+ * Returns all missing parts and minifigs of every set in a board, including the sets
  * in all (visible) sub-boards, recursively.
  */
 class GetBoardMissingPartsController extends AbstractController
 {
     public function __construct(
-        private readonly SetListRepository      $setListRepository,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly Security               $security,
-        private readonly BoardAccessService     $boardAccessService,
+        private readonly SetListRepository   $setListRepository,
+        private readonly Security            $security,
+        private readonly BoardAccessService  $boardAccessService,
+        private readonly MissingItemsService $missingItemsService,
     ) {}
 
     public function __invoke(string $id): JsonResponse
@@ -44,27 +41,8 @@ class GetBoardMissingPartsController extends AbstractController
         }
 
         // board id => path relative to the requested board ("Sub > Sub sub")
-        $boardPaths = [];
-        $this->collectBoards($setList, $userData, $setList->getTitle(), $boardPaths);
-
-        /** @var UserSetPart[] $userSetParts */
-        $userSetParts = $this->entityManager->createQueryBuilder()
-            ->select('usp', 'sls', 'sl', 's', 'sp', 'pc', 'p', 'c')
-            ->from(UserSetPart::class, 'usp')
-            ->join('usp.setListSet', 'sls')
-            ->join('sls.setList', 'sl')
-            ->join('sls.set', 's')
-            ->join('usp.setPart', 'sp')
-            ->join('sp.partColor', 'pc')
-            ->join('pc.part', 'p')
-            ->join('pc.color', 'c')
-            ->where('sl.id IN (:boardIds)')
-            ->andWhere('usp.missingQuantity > 0')
-            ->setParameter('boardIds', array_keys($boardPaths))
-            ->orderBy('s.number', 'ASC')
-            ->addOrderBy('p.partNumber', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $boardPaths = $this->missingItemsService->collectBoardPaths($setList, $userData);
+        $userSetParts = $this->missingItemsService->findMissingParts(array_keys($boardPaths));
 
         $parts = [];
         foreach ($userSetParts as $userSetPart) {
@@ -94,24 +72,31 @@ class GetBoardMissingPartsController extends AbstractController
             ];
         }
 
-        return new JsonResponse([
-            'board' => $setList->getTitle(),
-            'parts' => $parts,
-        ]);
-    }
+        $userSetMinifigs = $this->missingItemsService->findMissingMinifigs(array_keys($boardPaths));
 
-    /**
-     * @param array<string, string> $boardPaths
-     */
-    private function collectBoards(SetList $board, ?UserData $userData, string $path, array &$boardPaths): void
-    {
-        $boardPaths[(string) $board->getId()] = $path;
+        $minifigs = [];
+        foreach ($userSetMinifigs as $userSetMinifig) {
+            $setListSet = $userSetMinifig->getSetListSet();
+            $set = $setListSet->getSet();
+            $setMinifig = $userSetMinifig->getSetMinifig();
+            $minifig = $setMinifig->getMinifig();
 
-        foreach ($board->getChildLists() as $child) {
-            // Skip sub-boards this user may not see (e.g. a private sub-board inside a public board)
-            if ($this->boardAccessService->canView($child, $userData)) {
-                $this->collectBoards($child, $userData, $path . ' > ' . $child->getTitle(), $boardPaths);
-            }
+            $minifigs[] = [
+                'board'           => $boardPaths[(string) $setListSet->getSetList()->getId()],
+                'setNumber'       => $set->getNumber(),
+                'setName'         => $set->getName(),
+                'minifigNumber'   => $minifig->getSetNumId(),
+                'name'            => $minifig->getName(),
+                'quantity'        => $setMinifig->getQuantity(),
+                'missingQuantity' => $userSetMinifig->getMissingQuantity(),
+                'imageUrl'        => $minifig->getImageUrl(),
+            ];
         }
+
+        return new JsonResponse([
+            'board'    => $setList->getTitle(),
+            'parts'    => $parts,
+            'minifigs' => $minifigs,
+        ]);
     }
 }

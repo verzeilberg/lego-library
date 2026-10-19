@@ -93,6 +93,9 @@ readonly class PartService
         }
 
         // -------------------- 5. Process parts --------------------
+        // SetParts created in this run, keyed by part-color + spare flag. Needed because
+        // findOneBy() does not see entities that are persisted but not flushed yet.
+        $createdSetParts = [];
         $i = 0;
         foreach ($parts as $row) {
             $partNumber = $row['part']['part_num'];
@@ -142,6 +145,14 @@ readonly class PartService
             }
 
             // --- SETPART ---
+            $setPartKey = $partColorKey . ($isSpare ? '-spare' : '');
+            if (isset($createdSetParts[$setPartKey])) {
+                // Same part, color and spare flag listed twice (e.g. different element ids): combine
+                $createdSetParts[$setPartKey]->setQuantity($createdSetParts[$setPartKey]->getQuantity() + $quantity);
+                $i++;
+                continue;
+            }
+
             $setPart = $this->setPartRepository->findOneBy([
                 'model' => $set,
                 'partColor' => $partColor,
@@ -155,6 +166,7 @@ readonly class PartService
                     ->setQuantity($quantity)
                     ->setIsSpare($isSpare);
                 $this->entityManager->persist($setPart);
+                $createdSetParts[$setPartKey] = $setPart;
             }
 
             $i++;

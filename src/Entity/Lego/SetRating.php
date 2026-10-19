@@ -17,19 +17,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SetRatingRepository::class)]
-#[ORM\Table(
-    name: 'lego_set_rating',
-    indexes: [
-        new ORM\Index(name: 'idx_set_rating_set', columns: ['set_number']),
-        new ORM\Index(name: 'idx_set_rating_user', columns: ['user_id']),
-    ],
-    uniqueConstraints: [
-        new ORM\UniqueConstraint(
-            name: 'uniq_user_set_rating',
-            columns: ['user_id', 'set_number']
-        )
-    ]
-)]
+#[ORM\Table(name: 'lego_set_rating')]
+#[ORM\UniqueConstraint(name: 'uniq_user_set_rating', columns: ['user_id', 'set_number'])]
 #[ApiResource(
     operations: [
         new Post(

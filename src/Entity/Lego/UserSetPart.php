@@ -11,15 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity]
-#[ORM\Table(
-    name: 'lego_user_set_part',
-    uniqueConstraints: [
-        new ORM\UniqueConstraint(
-            name: 'uniq_user_set_part',
-            columns: ['set_list_set_id', 'set_part_id']
-        )
-    ]
-)]
+#[ORM\Table(name: 'lego_user_set_part')]
+#[ORM\UniqueConstraint(name: 'uniq_user_set_part', columns: ['set_list_set_id', 'set_part_id'])]
 #[AllowDynamicProperties] #[ApiResource(
     shortName: 'User',
     description: 'Set User',

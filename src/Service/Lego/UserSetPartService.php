@@ -119,7 +119,7 @@ readonly class UserSetPartService
         $remainingDefects = $setListSet->getPartStates()->filter(
             fn(UserSetPart $p) => $p !== $userSetPart && $p->getTotalDefective() > 0
         );
-        $hasDefects = !$allZero || $remainingDefects->count() > 0;
+        $hasDefects = !$allZero || $remainingDefects->count() > 0 || $setListSet->hasMissingMinifigs();
         $setListSet->setComplete(!$hasDefects);
 
         $this->entityManager->flush();

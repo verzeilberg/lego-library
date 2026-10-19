@@ -11,9 +11,11 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\CreateSetController;
 use App\Controller\Lego\DeleteSetFromSetListController;
+use App\Controller\Lego\GetSetBrickLinkWantedListController;
 use App\Controller\Lego\GetSetController;
 use App\Controller\Lego\MoveSetController;
 use App\Controller\Lego\UpdateSetInstructionsController;
+use App\Controller\Lego\UpdateSetMinifigStateController;
 use App\Controller\Lego\UploadSetImagesController;
 use App\Dto\Request\Lego\CreateSetRequest;
 use App\Entity\Media\MediaObject;
@@ -115,6 +117,37 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
                     ])
                 )
             ),
+            deserialize: false,
+        ),
+        new Get(
+            uriTemplate: '/lego/set-list/{listId}/set/{setNumber}/missing-parts/bricklink',
+            controller: GetSetBrickLinkWantedListController::class,
+            shortName: 'BrickLink wanted list of the missing parts of a lego set in a board',
+            read: false,
+        ),
+        new Patch(
+            uriTemplate: '/lego/set-list/{listId}/set/{setNumber}/minifigs/{setMinifigId}',
+            requirements: ['setMinifigId' => '\\d+'],
+            controller: UpdateSetMinifigStateController::class,
+            shortName: 'Update missing quantity of a minifig of a lego set in a board',
+            openapi: new Model\Operation(
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/merge-patch+json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'missingQuantity' => [
+                                        'type' => 'integer'
+                                    ]
+                                ],
+                                'required' => ['missingQuantity'],
+                            ]
+                        ]
+                    ])
+                )
+            ),
+            read: false,
             deserialize: false,
         ),
         new Patch(

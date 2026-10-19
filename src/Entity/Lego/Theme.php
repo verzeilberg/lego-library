@@ -8,12 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity(repositoryClass: ThemeRepository::class)]
-#[ORM\Table(
-    name: "lego_theme",
-    indexes: [
-        new ORM\Index(name: "idx_parent_theme", columns: ["parent_theme_id"])
-    ]
-)]
+#[ORM\Table(name: "lego_theme")]
 #[ApiResource(operations: [])]
 class Theme
 {

@@ -97,15 +97,22 @@ final readonly class SetDtoMapper
         }
 
         // --- minifigs ---
+        $missingMinifigs = [];
+        foreach ($listSet->getMinifigStates() as $minifigState) {
+            $missingMinifigs[$minifigState->getSetMinifig()->getId()] = $minifigState->getMissingQuantity();
+        }
+
         foreach ($set->getSetMinifigs() as $link) {
             $fig = $link->getMinifig();
 
             $figDto = new SetMinifigDTO();
             $figDto->id = $fig->getId();
+            $figDto->setMinifigId = $link->getId();
             $figDto->setNumId = $fig->getSetNumId();
             $figDto->name = $fig->getName();
             $figDto->imageUrl = $fig->getImageUrl();
             $figDto->quantity = $link->getQuantity();
+            $figDto->missingQuantity = $missingMinifigs[$link->getId()] ?? 0;
 
             $dto->setMinifigs[] = $figDto;
         }
