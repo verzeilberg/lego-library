@@ -107,6 +107,7 @@ readonly class BrickLinkWantedListService
             $element->appendChild($doc->createElement('NOTIFY', 'N'));
         }
 
-        return $doc->saveXML();
+        // BrickLink expects the document to start with <INVENTORY>, without an XML declaration
+        return $doc->saveXML($doc->documentElement);
     }
 }
