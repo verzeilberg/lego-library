@@ -6,6 +6,7 @@ use App\Dto\Request\Lego\SetListsRequest;
 use App\Repository\Lego\SetListRepository;
 use App\Repository\Lego\SetListSetRepository;
 use App\Service\Lego\BoardAccessService;
+use App\Service\Lego\CompletenessService;
 use App\Service\Lego\SetListService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -22,6 +23,7 @@ class GetSetListChildrenAndSetsController extends AbstractController
         private readonly SetListService       $setListService,
         private readonly Security             $security,
         private readonly BoardAccessService   $boardAccessService,
+        private readonly CompletenessService  $completenessService,
     ) {}
 
     public function __invoke(string $id, Request $request): JsonResponse
@@ -61,8 +63,41 @@ class GetSetListChildrenAndSetsController extends AbstractController
             fn($child) => $this->boardAccessService->canView($child, $userData),
         );
 
-        $result = $this->setListService->getCombinedListWithSets($childLists, $setLinks);
+        $result = array_slice($this->setListService->getCombinedListWithSets($childLists, $setLinks), $offset, $limit);
+        $this->addCompleteness($result, $childLists, $setLinks, $userData);
 
-        return $this->json(array_slice($result, $offset, $limit), 200, [], ['groups' => ['setList:read']]);
+        return $this->json($result, 200, [], ['groups' => ['setList:read']]);
+    }
+
+    /**
+     * Adds the completeness percentage to the sets and sub-boards on this page.
+     *
+     * @param SetListsRequest[] $items
+     */
+    private function addCompleteness(array $items, array $childLists, iterable $setLinks, $userData): void
+    {
+        $childListsById = [];
+        foreach ($childLists as $child) {
+            $childListsById[(string) $child->getId()] = $child;
+        }
+
+        // Set items use the base set number as id
+        $setLinksByNumber = [];
+        foreach ($setLinks as $link) {
+            $setLinksByNumber[$link->getSet()->getBaseNumber()] = $link;
+        }
+
+        $setItems = array_filter($items, fn(SetListsRequest $item) => $item->isSet && isset($setLinksByNumber[$item->id]));
+        $setStats = $this->completenessService->setStats(
+            array_map(fn(SetListsRequest $item) => $setLinksByNumber[$item->id], $setItems)
+        );
+
+        foreach ($items as $item) {
+            if ($item->isSet && isset($setLinksByNumber[$item->id])) {
+                $item->completeness = $setStats[(string) $setLinksByNumber[$item->id]->getId()]['completeness'] ?? null;
+            } elseif (!$item->isSet && isset($childListsById[$item->id])) {
+                $item->completeness = $this->completenessService->boardStats($childListsById[$item->id], $userData)['completeness'];
+            }
+        }
     }
 }

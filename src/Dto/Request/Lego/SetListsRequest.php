@@ -51,6 +51,10 @@ final class SetListsRequest
     #[Groups(['setList:read'])]
     public ?bool $canContribute = null;
 
+    /** Completeness percentage of the set or (sub-)board, see CompletenessService */
+    #[Groups(['setList:read'])]
+    public ?int $completeness = null;
+
     public function __construct(
         string $id,
         string $title,

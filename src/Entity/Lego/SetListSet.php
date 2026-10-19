@@ -21,15 +21,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
  * prevent duplicate entries in a list.
  */
 #[ORM\Entity(repositoryClass: SetListSetRepository::class)]
-#[ORM\Table(
-    name: 'lego_set_list_set',
-    uniqueConstraints: [
-        new ORM\UniqueConstraint(
-            name: 'uniq_set_list_set',
-            columns: ['set_number', 'set_list_id']
-        )
-    ]
-)]
+#[ORM\Table(name: 'lego_set_list_set')]
+#[ORM\UniqueConstraint(name: 'uniq_set_list_set', columns: ['set_number', 'set_list_id'])]
 class SetListSet
 {
     /**
@@ -125,6 +118,14 @@ class SetListSet
     )]
     private Collection $partStates;
 
+    #[ORM\OneToMany(
+        targetEntity: UserSetMinifig::class,
+        mappedBy: 'setListSet',
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    private Collection $minifigStates;
+
     /**
      * Initializes Doctrine collections.
      */
@@ -132,6 +133,7 @@ class SetListSet
     {
         $this->mediaObjects = new ArrayCollection();
         $this->partStates = new ArrayCollection();
+        $this->minifigStates = new ArrayCollection();
     }
 
     /**
@@ -331,5 +333,51 @@ class SetListSet
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, UserSetMinifig>
+     */
+    public function getMinifigStates(): Collection
+    {
+        return $this->minifigStates;
+    }
+
+    public function addMinifigState(UserSetMinifig $minifigState): static
+    {
+        if (!$this->minifigStates->contains($minifigState)) {
+            $this->minifigStates->add($minifigState);
+            $minifigState->setSetListSet($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMinifigState(UserSetMinifig $minifigState): static
+    {
+        // Orphan removal will handle deletion
+        $this->minifigStates->removeElement($minifigState);
+
+        return $this;
+    }
+
+    /**
+     * Whether any part of this set is marked as missing, broken or discoloured.
+     */
+    public function hasDefectiveParts(): bool
+    {
+        return $this->partStates->exists(
+            fn(int $key, UserSetPart $state) => $state->getTotalDefective() > 0
+        );
+    }
+
+    /**
+     * Whether any minifig of this set is marked as missing.
+     */
+    public function hasMissingMinifigs(): bool
+    {
+        return $this->minifigStates->exists(
+            fn(int $key, UserSetMinifig $state) => $state->getMissingQuantity() > 0
+        );
     }
 }

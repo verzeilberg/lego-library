@@ -61,7 +61,7 @@ class SyncSparePartsCommand extends Command
             }
 
             try {
-                $rows = $this->rebrickableClient->getPartsBySetId($set->getBaseNumber())['results'] ?? [];
+                $rows = $this->rebrickableClient->getPartsBySetId($set->getNumber())['results'] ?? [];
             } catch (\Throwable $e) {
                 $io->error(sprintf('%s: could not fetch parts (%s)', $set->getNumber(), $e->getMessage()));
                 continue;
@@ -69,7 +69,7 @@ class SyncSparePartsCommand extends Command
 
             $marked = $this->syncSet($set, $rows, $io);
             $totalMarked += $marked;
-            $io->writeln(sprintf('%s: %d spare part(s) marked', $set->getNumber(), $marked));
+            $io->writeln(sprintf('%s: %d spare part(s) marked or created', $set->getNumber(), $marked));
         }
 
         if ($dryRun) {
@@ -78,7 +78,7 @@ class SyncSparePartsCommand extends Command
         }
 
         $this->entityManager->flush();
-        $io->success(sprintf('%d spare part(s) marked in %d set(s).', $totalMarked, count($sets)));
+        $io->success(sprintf('%d spare part(s) marked or created in %d set(s).', $totalMarked, count($sets)));
 
         return Command::SUCCESS;
     }
@@ -114,10 +114,17 @@ class SyncSparePartsCommand extends Command
             }
 
             // Only a single row while Rebrickable also has a regular row:
-            // that row is the regular part, the spare was never imported.
+            // that row is the regular part, the spare was never imported (old import bug).
             if (count($candidates) < 2 && isset($regularKeys[$key])) {
                 if (count($candidates) === 1) {
-                    $io->writeln(sprintf('  %s: spare %s not imported, skipped', $set->getNumber(), $key));
+                    $spare = (new SetPart())
+                        ->setPartColor($candidates[0]->getPartColor())
+                        ->setQuantity($spareQuantity)
+                        ->setIsSpare(true);
+                    $set->addSetPart($spare);
+                    $this->entityManager->persist($spare);
+                    $io->writeln(sprintf('  %s: spare %s was not imported, created', $set->getNumber(), $key));
+                    $marked++;
                 }
                 continue;
             }

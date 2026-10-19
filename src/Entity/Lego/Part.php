@@ -21,6 +21,10 @@ class Part
     #[Groups(['part:read', 'lego_set:read'])]
     private string $name;
 
+    /** Part number on BrickLink (can differ from Rebrickable), filled on demand */
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $brickLinkId = null;
+
     #[ORM\OneToMany(targetEntity: PartColor::class, mappedBy: 'part', cascade: ['persist'])]
     private Collection $colors;
 
@@ -32,6 +36,9 @@ class Part
 
     public function getName(): string { return $this->name; }
     public function setName(string $name): self { $this->name = $name; return $this; }
+
+    public function getBrickLinkId(): ?string { return $this->brickLinkId; }
+    public function setBrickLinkId(?string $brickLinkId): self { $this->brickLinkId = $brickLinkId; return $this; }
 
     public function getColors(): Collection { return $this->colors; }
     public function addColor(PartColor $color): self {

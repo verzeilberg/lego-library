@@ -7,7 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PartColorRepository::class)]
-#[ORM\Table(name: 'lego_part_color', uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_part_color', columns: ['part_id', 'color_id'])])]
+#[ORM\Table(name: 'lego_part_color')]
+#[ORM\UniqueConstraint(name: 'uniq_part_color', columns: ['part_id', 'color_id'])]
 class PartColor
 {
     #[ORM\Id]

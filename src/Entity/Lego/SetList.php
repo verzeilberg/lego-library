@@ -11,7 +11,9 @@ use ApiPlatform\OpenApi\Model;
 use App\Controller\Lego\DeleteSetImageController;
 use App\Controller\Lego\DeleteSetListController;
 use App\Controller\Lego\GetAllSetListsByUserController;
+use App\Controller\Lego\GetBoardBrickLinkWantedListController;
 use App\Controller\Lego\GetBoardMissingPartsController;
+use App\Controller\Lego\GetBoardStatsController;
 use App\Controller\Lego\GetSetListChildrenAndSetsController;
 use App\Controller\Lego\GetSetListsByUserController;
 use App\Controller\Lego\GetSetListsPublic;
@@ -150,6 +152,18 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new GetCollection(
             uriTemplate: '/set-lists/{id}',
             controller: GetSetListChildrenAndSetsController::class,
+        ),
+        new Get(
+            uriTemplate: '/set-list/{id}/missing-parts/bricklink',
+            controller: GetBoardBrickLinkWantedListController::class,
+            shortName: 'BrickLink wanted list of all missing parts in a board and its sub-boards',
+            read: false,
+        ),
+        new Get(
+            uriTemplate: '/set-list/{id}/stats',
+            controller: GetBoardStatsController::class,
+            shortName: 'Completeness stats of a board and its sub-boards',
+            read: false,
         ),
         new Get(
             uriTemplate: '/set-list/{id}/missing-parts',

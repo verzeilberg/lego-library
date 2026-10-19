@@ -8,10 +8,8 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: SetPartRepository::class)]
-#[ORM\Table(
-    name: 'lego_set_part',
-    uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_set_part_color', columns: ['model_number','part_color_id','is_spare'])]
-)]
+#[ORM\Table(name: 'lego_set_part')]
+#[ORM\UniqueConstraint(name: 'uniq_set_part_color', columns: ['model_number', 'part_color_id', 'is_spare'])]
 class SetPart
 {
     #[ORM\Id]
